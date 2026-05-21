@@ -158,9 +158,60 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
   .header-dev-stamp { display: none; }
 }
 .header-actions { display: flex; align-items: center; gap: 2px; }
-#refRangesBtn, #aboutBtn, #themeToggleBtn, #settingsBtn { background: none; border: none; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-muted); transition: background 0.2s, color 0.2s; }
-#refRangesBtn:hover, #aboutBtn:hover, #themeToggleBtn:hover, #settingsBtn:hover { background: var(--primary-xlight); color: var(--primary); }
-#refRangesBtn svg, #aboutBtn svg, #themeToggleBtn svg, #settingsBtn svg { width: 22px; height: 22px; flex-shrink: 0; }
+#refRangesBtn, #aboutBtn, #tourBtn, #themeToggleBtn, #settingsBtn { background: none; border: none; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-muted); transition: background 0.2s, color 0.2s; }
+#refRangesBtn:hover, #aboutBtn:hover, #tourBtn:hover, #themeToggleBtn:hover, #settingsBtn:hover { background: var(--primary-xlight); color: var(--primary); }
+#refRangesBtn svg, #aboutBtn svg, #tourBtn svg, #themeToggleBtn svg, #settingsBtn svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+
+/* ─── ONBOARDING TOUR ─────────────────────────────────── */
+#tour-overlay {
+  position: fixed; inset: 0; z-index: 1100;
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.25s;
+}
+#tour-overlay.tour-active { pointer-events: all; opacity: 1; }
+#tour-spotlight {
+  position: fixed; z-index: 1101;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
+  border-radius: 8px;
+  opacity: 0;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease, border-radius 0.25s ease, opacity 0.2s ease;
+  pointer-events: none;
+}
+#tour-tooltip {
+  position: fixed; z-index: 1102;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 16px 18px;
+  width: 300px;
+  opacity: 0;
+  pointer-events: all;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease;
+}
+.tour-counter {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;
+}
+.tour-title {
+  font-size: 15px; font-weight: 700; color: var(--primary-dark);
+  margin-bottom: 7px; line-height: 1.3;
+}
+.tour-desc {
+  font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 14px;
+}
+.tour-actions {
+  display: flex; align-items: center; gap: 6px;
+}
+.tour-skip {
+  margin-right: auto; font-size: 12px; color: var(--text-muted);
+  background: none; border: none; cursor: pointer; padding: 2px 0;
+  text-decoration: underline; flex-shrink: 0;
+}
+.tour-skip:hover { color: var(--text); }
+html[data-theme="dark"] #tour-spotlight { box-shadow: 0 0 0 9999px rgba(0,0,0,0.7); }
 
 /* ─── REFERENCE RANGES (full-screen) ─────────────────── */
 .ref-ranges-panel {
@@ -2075,6 +2126,11 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
 .modal-box--anonymise { max-width: min(440px, 100%); }
 .modal-box--anonymise .modal-desc { text-align: left; font-size: 13.5px; }
 .settings-anonymise-btn { width: 100%; justify-content: center; box-sizing: border-box; margin-top: 2px; }
+.modal-box--disclaimer-edit { max-width: min(520px, 100%); }
+.modal-box--disclaimer-edit .modal-desc { text-align: left; font-size: 13px; }
+.disclaimer-edit-textarea { width: 100%; box-sizing: border-box; min-height: 110px; font-size: 13px; font-family: var(--font); line-height: 1.5; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); color: var(--text); background: var(--bg); resize: vertical; margin-bottom: 4px; }
+.disclaimer-edit-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(21,101,168,0.13); }
+html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); border-color: var(--border); color: var(--text); }
 .settings-toggle-hint { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; font-weight: 400; line-height: 1.28; }
 .settings-machine-cap-desc { font-size: 12px; color: var(--text-muted); line-height: 1.45; margin: 4px 0 10px; font-weight: 400; }
 .settings-machine-cap-block {
@@ -2586,6 +2642,21 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
     font-size: 8pt;
     line-height: 1.35;
   }
+  .print-section--report-disclaimer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin: 8px 0 4px;
+    padding: 5px 7px;
+    border-top: 1px solid #ccc;
+    background: #fff;
+    font-size: 7.5pt;
+    line-height: 1.35;
+    color: #444;
+  }
+  .print-report-disclaimer-text {
+    margin: 0;
+    font-style: italic;
+  }
   .print-nonfusic-disclaimer-intro {
     margin: 0 0 5px;
     font-weight: 600;
@@ -3059,13 +3130,14 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
 <!-- ══════════ HEADER ══════════════════════════════════ -->
 <header id="appHeader">
   <div class="header-logo">
-    <span class="header-badge">FUSIC HD</span>
-    <span class="header-title">Report <span>Generator</span></span>
-    <span class="header-dev-stamp" role="note" aria-label="In development. This build is under active development." title="This build is under active development">In Development</span>
+    <span class="header-title">FUSIC HD <span>Report Generator</span></span>
   </div>
   <div class="header-actions">
     <button type="button" id="refRangesBtn" title="Reference ranges" aria-label="Open reference ranges">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>
+    </button>
+    <button type="button" id="tourBtn" title="Take the tour" aria-label="Start onboarding tour">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
     </button>
     <button type="button" id="aboutBtn" title="About" aria-label="About this application">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
@@ -3079,6 +3151,21 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
     </button>
   </div>
 </header>
+
+<!-- ══════════ ONBOARDING TOUR ════════════════════════ -->
+<div id="tour-overlay" aria-hidden="true">
+  <div id="tour-spotlight"></div>
+  <div id="tour-tooltip" role="dialog" aria-label="Tour step" aria-modal="false">
+    <div class="tour-counter" id="tourCounter"></div>
+    <div class="tour-title" id="tourTitle"></div>
+    <div class="tour-desc" id="tourDesc"></div>
+    <div class="tour-actions">
+      <button class="tour-skip" id="tourSkipBtn">Skip tour</button>
+      <button class="btn btn-secondary" id="tourBackBtn">Back</button>
+      <button class="btn btn-primary" id="tourNextBtn">Next</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════ SETTINGS OVERLAY ════════════════════════ -->
 <div id="overlay"></div>
@@ -3317,6 +3404,7 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
     <div class="settings-group">
       <div class="settings-group-title">Export Settings</div>
       <div class="settings-group-body">
+        <button type="button" class="btn btn-secondary settings-anonymise-btn" id="openAnonymiseModal">Pseudo-anonymise study…</button>
         <div class="toggle-row">
           <div>
             <div class="toggle-label">Omit empty fields from export</div>
@@ -3352,7 +3440,14 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
           </div>
           <label class="toggle-switch"><input type="checkbox" id="toggle-export-pdf-logo" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
-        <button type="button" class="btn btn-secondary settings-anonymise-btn" id="openAnonymiseModal">Pseudo-anonymise study…</button>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Report Disclaimer</div>
+            <div class="settings-toggle-hint">Appends a disclaimer to the bottom of exported reports.</div>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="toggle-export-report-disclaimer"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <button type="button" class="btn btn-secondary settings-anonymise-btn" id="openDisclaimerEditModal" onclick="openDisclaimerEditModal()">Edit disclaimer…</button>
       </div>
     </div>
     <div class="settings-group">
@@ -4657,12 +4752,12 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="footer-export-dropdown" id="exportDropdown" role="menu" aria-hidden="true">
-      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="xlsx">Excel workbook (.xlsx)</button>
-      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="quick-data-page">Export for TOTEM FUSIC HD Reporting Tool</button>
       <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="clipboard-text">Plain text — copy to clipboard</button>
       <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="plain-text-page">Plain text — full page (select & copy)</button>
       <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="print-pdf">Print / Save as PDF (A4)<span class="export-attached-img-badge" title="Study has images attached" aria-label="Study has images attached"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span></button>
       <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="edec">BSE/EDEC Style Report<span class="export-attached-img-badge" title="Study has images attached" aria-label="Study has images attached"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span></button>
+      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="xlsx">Excel workbook (.xlsx)</button>
+      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="quick-data-page">Export for TOTEM FUSIC HD Reporting Tool</button>
     </div>
   </div>
 </div>
@@ -4720,26 +4815,6 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
       <ul class="export-formats-list" role="list">
         <li class="export-format-row">
           <span class="export-format-icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
-          </span>
-          <div class="export-format-text">
-            <h3>Excel workbook (.xlsx)</h3>
-            <p>Structured spreadsheet for filing or further editing.</p>
-          </div>
-          <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('xlsx')">Download</button>
-        </li>
-        <li class="export-format-row">
-          <span class="export-format-icon" aria-hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
-          </span>
-          <div class="export-format-text">
-            <h3>Export for TOTEM FUSIC HD Reporting Tool</h3>
-            <p>Allows you to quickly copy and paste values into Dr Kendall's Excel-based FUSIC HD reporting tool.</p>
-          </div>
-          <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('quick-data-page')">Open</button>
-        </li>
-        <li class="export-format-row">
-          <span class="export-format-icon" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </span>
           <div class="export-format-text">
@@ -4777,6 +4852,26 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
             <p>Free-text editor, produces a PDF in BSE/EDEC style.</p>
           </div>
           <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('edec')">Open editor</button>
+        </li>
+        <li class="export-format-row">
+          <span class="export-format-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+          </span>
+          <div class="export-format-text">
+            <h3>Excel workbook (.xlsx)</h3>
+            <p>Structured spreadsheet for filing or further editing.</p>
+          </div>
+          <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('xlsx')">Download</button>
+        </li>
+        <li class="export-format-row">
+          <span class="export-format-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+          </span>
+          <div class="export-format-text">
+            <h3>Export for TOTEM FUSIC HD Reporting Tool</h3>
+            <p>Allows you to quickly copy and paste values into Dr Kendall's Excel-based FUSIC HD reporting tool.</p>
+          </div>
+          <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('quick-data-page')">Open</button>
         </li>
       </ul>
      </div>
@@ -4851,6 +4946,19 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
       <p>Always double-check the pasted values. Any future updates to the Excel sheet may shift the cell layout and break the alignment.</p>
     </div>
     <pre id="plainTextReportBody" tabindex="0"></pre>
+  </div>
+</div>
+
+<div class="modal-overlay" id="disclaimerEditModal" onclick="if(event.target===this)closeDisclaimerEditModal()">
+  <div class="modal-box modal-box--disclaimer-edit" role="dialog" aria-labelledby="disclaimerEditTitle" aria-modal="true" onclick="event.stopPropagation()">
+    <div class="modal-title" id="disclaimerEditTitle">Edit report disclaimer</div>
+    <div class="modal-desc">This text will appear at the bottom of exported reports when the Report Disclaimer setting is enabled.</div>
+    <textarea id="disclaimerEditTextarea" class="disclaimer-edit-textarea" rows="5" aria-label="Disclaimer text"></textarea>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="resetDisclaimerToDefault()">Reset to default</button>
+      <button type="button" class="btn btn-secondary" onclick="closeDisclaimerEditModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="saveDisclaimerEdit()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -5806,6 +5914,15 @@ function buildEdecPrintHTML() {
   /* Reported by */
   parts.push('<div class="edec-print-reported-by"><strong>Reported by:</strong> ' + esc(gv('f-operatorName') || '') + '</div>');
 
+  /* Report disclaimer */
+  const rdt = document.getElementById('toggle-export-report-disclaimer');
+  if (rdt?.checked) {
+    const disclaimerText = getReportDisclaimerText().trim();
+    if (disclaimerText) {
+      parts.push(`<section class="print-section print-section--report-disclaimer" aria-label="Report disclaimer"><p class="print-report-disclaimer-text">${esc(disclaimerText)}</p></section>`);
+    }
+  }
+
   parts.push('</div>');
   return parts.join('');
 }
@@ -6154,6 +6271,7 @@ const SESSION_DRAFT_TOGGLE_IDS = [
   'toggle-omit-empty-export',
   'toggle-export-summary-near-top',
   'toggle-export-nonfusic-disclaimer',
+  'toggle-export-report-disclaimer',
   'toggle-export-aggressive-2page',
   'toggle-export-pdf-logo',
   'toggle-guidance-mode'
@@ -6367,6 +6485,13 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshAnonymiseEntrypointButtons();
 
   document.getElementById('scanInfoCollapseAllBtn')?.addEventListener('click', toggleAllCollapsibleSections);
+  document.getElementById('tourBtn')?.addEventListener('click', startTour);
+  document.getElementById('tourSkipBtn')?.addEventListener('click', endTour);
+  document.getElementById('tourBackBtn')?.addEventListener('click', tourBack);
+  document.getElementById('tourNextBtn')?.addEventListener('click', tourNext);
+  document.getElementById('tour-overlay')?.addEventListener('click', function(e) {
+    if (e.target === this) endTour();
+  });
   updateScanInfoCollapseAllButton();
 
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
@@ -7069,6 +7194,166 @@ function recalcAVAContinuity() {
   }
   inp.placeholder = (!manual && inp.value.trim() === '') ? 'Requires LVOT diameter, LVOT VTI & AV VTI' : '';
   setAutoCalcSourceVisible(src, manual, inp.value.trim() !== '');
+}
+
+// ─── ONBOARDING TOUR ───────────────────────────────────
+const TOUR_STEPS = [
+  {
+    sel: '#appHeader',
+    title: 'Welcome to FUSIC HD',
+    desc: 'This tool generates structured FUSIC HD echo reports. Use the icons in the top-right to switch theme, open settings, or restart this tour at any time.',
+    r: '0px'
+  },
+  {
+    sel: '#scanInfoCard',
+    title: 'Scan Information',
+    desc: 'Start here — enter patient demographics, operator details, machine information, and scan date/time before completing the rest of the form.',
+    r: '10px'
+  },
+  {
+    sel: '#sec-demographics',
+    title: 'Form Sections',
+    desc: 'The main body is divided into collapsible sections — Left Ventricle, Right Heart, Valves, and more. Click any section header to expand or collapse it.',
+    r: '10px'
+  },
+  {
+    sel: '#sum-cond-master-wrap',
+    title: 'FUSIC HD Questions',
+    desc: 'These ten structured questions are the heart of the FUSIC HD protocol. Answer each one to build a structured clinical summary.',
+    r: '8px',
+    before() {
+      const sec = document.getElementById('sec-summary');
+      if (sec && sec.classList.contains('section-collapsed')) toggleSection('sec-summary');
+    }
+  },
+  {
+    sel: '#summary-overall-impression-wrap',
+    title: 'Clinical Conclusions',
+    desc: 'Document your overall impression and recommended actions here. These fields feed directly into every export format — plain text, PDF, Excel, and more.',
+    r: '8px'
+  },
+  {
+    sel: '#settingsPanel',
+    title: 'Settings & Options',
+    desc: 'Customise your experience — toggle which sections appear, adjust export behaviour, enable guidance mode, and more.',
+    r: '0px',
+    before() { openSettings(); },
+    after() { closeSettings(); }
+  },
+  {
+    sel: '#stickyFooter',
+    title: 'Exporting Your Report',
+    desc: 'When ready, use the Export button to generate your report. Choose from plain text, print/PDF, Excel workbook, BSE/EDEC style, and more.',
+    r: '0px'
+  }
+];
+
+let _tourActive = false;
+let _tourStep = 0;
+let _tourRO = null;
+
+function startTour() {
+  if (_tourActive) return;
+  _tourStep = 0;
+  _tourActive = true;
+  const ov = document.getElementById('tour-overlay');
+  ov.classList.add('tour-active');
+  ov.setAttribute('aria-hidden', 'false');
+  _goToTourStep(0);
+}
+
+function endTour() {
+  const step = TOUR_STEPS[_tourStep];
+  if (step && step.after) step.after();
+  _tourActive = false;
+  const ov = document.getElementById('tour-overlay');
+  ov.classList.remove('tour-active');
+  ov.setAttribute('aria-hidden', 'true');
+  if (_tourRO) { _tourRO.disconnect(); _tourRO = null; }
+  document.getElementById('tour-spotlight').style.opacity = '';
+  document.getElementById('tour-tooltip').style.opacity = '';
+}
+
+function tourNext() {
+  const step = TOUR_STEPS[_tourStep];
+  if (_tourStep < TOUR_STEPS.length - 1) {
+    if (step && step.after) step.after();
+    _tourStep++;
+    _goToTourStep(_tourStep);
+  } else {
+    endTour();
+  }
+}
+
+function tourBack() {
+  const step = TOUR_STEPS[_tourStep];
+  if (step && step.after) step.after();
+  if (_tourStep > 0) {
+    _tourStep--;
+    _goToTourStep(_tourStep);
+  }
+}
+
+function _goToTourStep(idx) {
+  const step = TOUR_STEPS[idx];
+  if (!step) return;
+  if (step.before) step.before();
+
+  document.getElementById('tourCounter').textContent = `Step ${idx + 1} of ${TOUR_STEPS.length}`;
+  document.getElementById('tourTitle').textContent = step.title;
+  document.getElementById('tourDesc').textContent = step.desc;
+  const backBtn = document.getElementById('tourBackBtn');
+  const nextBtn = document.getElementById('tourNextBtn');
+  backBtn.style.display = idx === 0 ? 'none' : '';
+  nextBtn.textContent = idx === TOUR_STEPS.length - 1 ? 'Finish' : 'Next';
+
+  const target = document.querySelector(step.sel);
+  if (!target) return;
+
+  const noScroll = step.sel === '#appHeader' || step.sel === '#stickyFooter';
+  if (!noScroll) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const delay = step.sel === '#settingsPanel' ? 400 : 350;
+  setTimeout(() => { if (_tourActive) _positionTour(target, step); }, delay);
+
+  if (_tourRO) _tourRO.disconnect();
+  _tourRO = new ResizeObserver(() => { if (_tourActive) _positionTour(target, step); });
+  _tourRO.observe(document.body);
+}
+
+function _positionTour(target, step) {
+  const rect = target.getBoundingClientRect();
+  const pad = 6;
+  const sl = document.getElementById('tour-spotlight');
+  sl.style.top    = `${rect.top    - pad}px`;
+  sl.style.left   = `${rect.left   - pad}px`;
+  sl.style.width  = `${rect.width  + pad * 2}px`;
+  sl.style.height = `${rect.height + pad * 2}px`;
+  sl.style.borderRadius = step.r || '8px';
+  sl.style.opacity = '1';
+
+  const tt = document.getElementById('tour-tooltip');
+  const ttW = 300;
+  const margin = 14;
+  const vpH = window.innerHeight;
+  const vpW = window.innerWidth;
+
+  const spaceBelow = vpH - rect.bottom - pad;
+  const spaceAbove = rect.top - pad;
+  let top;
+  if (spaceBelow >= 180 || spaceBelow >= spaceAbove) {
+    top = rect.bottom + pad + margin;
+  } else {
+    top = rect.top - pad - margin - tt.offsetHeight;
+  }
+  top = Math.max(8, Math.min(top, vpH - tt.offsetHeight - 8));
+
+  let left = rect.left + rect.width / 2 - ttW / 2;
+  left = Math.max(8, Math.min(left, vpW - ttW - 8));
+
+  tt.style.top  = `${top}px`;
+  tt.style.left = `${left}px`;
+  tt.style.opacity = '1';
 }
 
 // ─── SETTINGS ──────────────────────────────────────────
@@ -11696,6 +11981,50 @@ function appendNonFusicHdDisclaimerExportRows(rows) {
   rows.push({ t: 'nonFusicDisclaimer', intro: NONFUSIC_HD_DISCLAIMER_EXPORT_INTRO, items });
 }
 
+const REPORT_DISCLAIMER_DEFAULT_TEXT = 'Disclaimer: The above report has been generated by a reporting tool in active development. It is not a final report and must not be entered into any patient record without formal verification, appropriate clinical review, and sign-off where required.';
+const REPORT_DISCLAIMER_STORAGE_KEY = 'fusic-hd-report-disclaimer-text';
+
+function getReportDisclaimerText() {
+  try {
+    const saved = localStorage.getItem(REPORT_DISCLAIMER_STORAGE_KEY);
+    return saved !== null ? saved : REPORT_DISCLAIMER_DEFAULT_TEXT;
+  } catch { return REPORT_DISCLAIMER_DEFAULT_TEXT; }
+}
+
+function setReportDisclaimerText(text) {
+  try { localStorage.setItem(REPORT_DISCLAIMER_STORAGE_KEY, text); } catch {}
+}
+
+function appendReportDisclaimerExportRows(rows) {
+  const t = document.getElementById('toggle-export-report-disclaimer');
+  if (!t?.checked) return;
+  const text = getReportDisclaimerText().trim();
+  if (!text) return;
+  rows.push({ t: 'blank' });
+  rows.push({ t: 'reportDisclaimer', text });
+}
+
+function openDisclaimerEditModal() {
+  const ta = document.getElementById('disclaimerEditTextarea');
+  if (ta) ta.value = getReportDisclaimerText();
+  document.getElementById('disclaimerEditModal')?.classList.add('open');
+}
+
+function closeDisclaimerEditModal() {
+  document.getElementById('disclaimerEditModal')?.classList.remove('open');
+}
+
+function saveDisclaimerEdit() {
+  const ta = document.getElementById('disclaimerEditTextarea');
+  if (ta) setReportDisclaimerText(ta.value.trim() || REPORT_DISCLAIMER_DEFAULT_TEXT);
+  closeDisclaimerEditModal();
+}
+
+function resetDisclaimerToDefault() {
+  const ta = document.getElementById('disclaimerEditTextarea');
+  if (ta) ta.value = REPORT_DISCLAIMER_DEFAULT_TEXT;
+}
+
 const NONFUSIC_DISCLAIMER_EXPORT_COLUMNS = 3;
 
 function formatNonFusicDisclaimerItemsPlainColumns(items, nCols) {
@@ -12188,6 +12517,7 @@ function buildExportRows() {
       });
     });
     appendNonFusicHdDisclaimerExportRows(rows);
+    appendReportDisclaimerExportRows(rows);
   }
 
   pruneOrphanNonFusicDisclaimerExportRows(rows);
@@ -12289,6 +12619,9 @@ function formatExportRowsAsPlainText(rows) {
       formatNonFusicDisclaimerItemsPlainColumns(r.items, NONFUSIC_DISCLAIMER_EXPORT_COLUMNS).forEach(line => {
         if (line) lines.push(line);
       });
+    } else if (r.t === 'reportDisclaimer') {
+      if (lines.length && lines[lines.length - 1] !== '') lines.push('');
+      lines.push(r.text);
     } else if (r.t === 'summaryConclusionsBlock') {
       const sig = (r.significance || '').trim();
       const imp = (r.impression || '').trim();
@@ -12468,6 +12801,10 @@ function renderExportRowsToPrintHTML(rows) {
       parts.push('<ul class="print-nonfusic-disclaimer-list">');
       for (const item of r.items) parts.push(`<li><span class="print-nonfusic-li-bullet">•</span> ${esc(item)}</li>`);
       parts.push('</ul></section>');
+    } else if (r.t === 'reportDisclaimer') {
+      closeMeta();
+      closeSection();
+      parts.push(`<section class="print-section print-section--report-disclaimer" aria-label="Report disclaimer"><p class="print-report-disclaimer-text">${esc(r.text)}</p></section>`);
     } else if (r.t === 'section') {
       closeMeta();
       closeSection();
@@ -12729,6 +13066,11 @@ function doExport() {
         rStyle[sheetRi] = 'nonfusicBullet';
         sheetRi++;
       }
+    } else if (r.t === 'reportDisclaimer') {
+      wsData.push([r.text, '']);
+      merges.push({ s: { r: sheetRi, c: 0 }, e: { r: sheetRi, c: 1 } });
+      rStyle[sheetRi] = 'reportDisclaimer';
+      sheetRi++;
     } else if (r.t === 'rwmaDiagram') {
       const st = r.states; const groups = [[],[],[],[]];
       for (let i = 1; i <= 17; i++) groups[st[i]||0].push(i);
@@ -12789,6 +13131,7 @@ function doExport() {
         else if (st==='nonfusicHdr') ws[ref].s = { font:{bold:true,sz:11,color:{rgb:'1E3A5F'}}, fill:{fgColor:{rgb:'DBEAFE'}}, alignment:{horizontal:'left',wrapText:true} };
         else if (st==='nonfusicIntro') ws[ref].s = { font:{bold:true,sz:10}, alignment:{horizontal:'left',wrapText:true} };
         else if (st==='nonfusicBullet') ws[ref].s = { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='reportDisclaimer') ws[ref].s = { font:{italic:true,sz:9,color:{rgb:'666666'}}, alignment:{horizontal:'left',wrapText:true} };
         else if (st==='subhdr') ws[ref].s = { font:{bold:true,sz:10,color:{rgb:'1E3A5F'}}, fill:{fgColor:{rgb:'F3F4F6'}}, alignment:{horizontal:'left',wrapText:true} };
         else if (st==='meta')   ws[ref].s = ci===0 ? { font:{bold:true,sz:10,color:{rgb:'3D5170'}}, alignment:{horizontal:'right'} } : { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
         else if (st==='row')    ws[ref].s = ci===0 ? { font:{bold:true,sz:10}, alignment:{horizontal:'right'} } : { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
