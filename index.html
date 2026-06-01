@@ -7,7 +7,7 @@
      - 'self'                          : same-origin assets (sw.js, manifest.json, FHD.jpg, icon-*.png)
      - 'unsafe-inline' (script/style)  : required by inline <script>/<style> blocks and ~119 inline
                                          event handlers (onclick=, oninput=, onchange=, etc.)
-     - https://cdn.jsdelivr.net        : SheetJS XLSX library used for Excel export
+     - https://cdn.jsdelivr.net        : xlsx-js-style (SheetJS fork with cell-style support) used for Excel export
      - data:                           : inline SVG chevron backgrounds in CSS, FHD logo embedded as
                                          data URL for PDF export, base64 fonts (none currently)
      - blob:                           : XLSX writeFile() creates a temporary blob URL for download -->
@@ -113,11 +113,9 @@ html[data-theme="dark"] .about-modal-close:hover { background: rgba(255, 255, 25
 html[data-theme="dark"] select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a8b8cc' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
 }
-html[data-theme="dark"] #themeToggleBtn .theme-icon-sun { display: flex; }
-html[data-theme="dark"] #themeToggleBtn .theme-icon-moon { display: none; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
+html { font-size: 16px; scrollbar-gutter: stable; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
 /* ─── HEADER ─────────────────────────────────────────── */
@@ -158,9 +156,9 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
   .header-dev-stamp { display: none; }
 }
 .header-actions { display: flex; align-items: center; gap: 2px; }
-#refRangesBtn, #aboutBtn, #tourBtn, #themeToggleBtn, #settingsBtn { background: none; border: none; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-muted); transition: background 0.2s, color 0.2s; }
-#refRangesBtn:hover, #aboutBtn:hover, #tourBtn:hover, #themeToggleBtn:hover, #settingsBtn:hover { background: var(--primary-xlight); color: var(--primary); }
-#refRangesBtn svg, #aboutBtn svg, #tourBtn svg, #themeToggleBtn svg, #settingsBtn svg { width: 22px; height: 22px; flex-shrink: 0; }
+#refRangesBtn, #aboutBtn, #settingsBtn, #windowViewBtn { background: none; border: none; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-muted); transition: background 0.2s, color 0.2s; }
+#refRangesBtn:hover, #aboutBtn:hover, #settingsBtn:hover, #windowViewBtn:hover { background: var(--primary-xlight); color: var(--primary); }
+#refRangesBtn svg, #aboutBtn svg, #settingsBtn svg, #windowViewBtn svg { width: 22px; height: 22px; flex-shrink: 0; }
 
 
 /* ─── ONBOARDING TOUR ─────────────────────────────────── */
@@ -608,8 +606,6 @@ html[data-theme="dark"] .edec-meas-block-title { background: #2a4c6e; }
   text-align: right;
   white-space: nowrap;
 }
-#themeToggleBtn .theme-icon-moon, #themeToggleBtn .theme-icon-sun { display: flex; align-items: center; justify-content: center; }
-#themeToggleBtn .theme-icon-sun { display: none; }
 
 /* ─── SETTINGS ───────────────────────────────────────── */
 #overlay { position: fixed; inset: 0; z-index: 200; background: rgba(10,20,40,0.45); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
@@ -1275,6 +1271,10 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
 #svr-field-wrap.section-hidden,
 #svri-field-wrap.section-hidden { display: none; }
 #ava-continuity-field-wrap.section-hidden { display: none; }
+#av-vmax-field-wrap.section-hidden,
+#lvot-vmax-field-wrap.section-hidden { display: none; }
+#aorta-detailed-fields-wrap.section-hidden { display: none; }
+#aorta-abd-summary-fields.section-hidden { display: none; }
 .lvot-csa-readout {
   font-size: 11.5px;
   color: var(--text-muted);
@@ -2072,6 +2072,43 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
   box-shadow: 0 0 0 2px rgba(21,101,168,0.15);
   background: var(--surface);
 }
+/* Section header rows */
+.export-images-row--header {
+  grid-template-columns: auto auto 1fr auto;
+  grid-template-areas: "handle tag input actions";
+  background: var(--primary-xlight);
+  border-color: var(--primary-light);
+}
+.export-images-header-label {
+  grid-area: tag;
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--primary-dark); background: var(--primary-light);
+  border-radius: 4px; padding: 3px 6px; white-space: nowrap; flex-shrink: 0;
+}
+.export-images-header-input {
+  grid-area: input;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 6px 8px; font-size: 13px; font-weight: 600; color: var(--text);
+  background: var(--surface); font-family: var(--font); width: 100%; min-width: 0;
+}
+.export-images-header-input:focus {
+  border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(21,101,168,0.15);
+}
+.export-images-header-input::placeholder { font-weight: 400; font-style: italic; color: var(--text-muted); }
+/* "Insert section header" button */
+.export-images-add-header-wrap {
+  margin-top: 8px;
+}
+.export-images-add-header-btn {
+  width: 100%; justify-content: center; min-height: 36px;
+  padding: 6px 12px; font-size: 13px; border-style: dashed;
+}
+/* PDF: section header heading */
+.print-image-section-header {
+  font-size: 13px; font-weight: 700; color: #1e3a5f;
+  margin: 14px 0 6px; padding-bottom: 4px;
+  border-bottom: 1.5px solid #cdd8e8; break-after: avoid;
+}
 .export-images-modal-footer {
   flex-shrink: 0;
   display: flex;
@@ -2270,6 +2307,8 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
 /* Wrappers for machine-capability hiding: no layout change when visible (grid children pass through) */
 .mc-doppler-wrap { display: contents; }
 .mc-doppler-wrap.section-hidden { display: none !important; }
+.wv-field.section-hidden { display: none; }
+.wv-checkbox-item.section-hidden { display: none; }
 .modal-box--about { max-width: min(560px, 100%); max-height: min(85vh, 720px); width: 100%; display: flex; flex-direction: column; padding: 0; overflow: hidden; text-align: left; }
 .about-modal-header { flex-shrink: 0; padding: 16px 18px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--primary-xlight); }
 .about-modal-header h2 { margin: 0; font-size: 16px; font-weight: 700; color: var(--primary-dark); }
@@ -2412,6 +2451,56 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
 }
 .lung-grid-summary.has-values { color: var(--primary); font-weight: 600; }
 
+/* ─── SECTION NAVIGATOR ───────────────────────────────── */
+.sec-nav-overlay {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(10,20,40,0.45);
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.sec-nav-overlay.open { opacity: 1; pointer-events: all; }
+.sec-nav-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -4px 24px rgba(21,101,168,0.18);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  max-height: 72vh; display: flex; flex-direction: column; overflow: hidden;
+}
+.sec-nav-overlay.open .sec-nav-sheet { transform: translateY(0); }
+.sec-nav-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 16px 10px; border-bottom: 1px solid var(--border-light); flex-shrink: 0;
+}
+.sec-nav-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.sec-nav-close {
+  background: none; border: none; cursor: pointer; color: var(--text-muted);
+  padding: 4px; display: flex; align-items: center; justify-content: center; border-radius: 4px;
+}
+.sec-nav-close:hover { background: var(--bg); }
+.sec-nav-list { overflow-y: auto; flex: 1; padding: 6px 0; }
+.sec-nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px; cursor: pointer; border: none; background: none;
+  width: 100%; text-align: left; font-family: var(--font);
+  color: var(--text); font-size: 14px; font-weight: 500; transition: background 0.15s;
+}
+.sec-nav-item:hover { background: var(--primary-xlight); }
+.sec-nav-item:active { background: var(--primary-light); }
+.sec-nav-item-num {
+  width: 28px; height: 28px; background: var(--primary); color: #fff;
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+
+/* Settings panel: clear button */
+.settings-clear-btn {
+  width: 100%; justify-content: center; min-height: 40px; padding: 8px 16px;
+  font-size: 13.5px; border-color: var(--red); color: var(--red);
+}
+.settings-clear-btn:hover { background: #fef2f2; border-color: var(--red); }
+html[data-theme="dark"] .settings-clear-btn:hover { background: #3f1f1f; }
+
 /* ─── VISIBILITY HELPERS ──────────────────────────────── */
 .form-section.section-hidden { display: none; }
 .sum-cond-master-wrap.section-hidden { display: none; }
@@ -2525,7 +2614,7 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
     margin: 0;
   }
   /* visibility:hidden keeps layout — causes many blank pages; hide siblings instead */
-  body > *:not(#printReportMount) {
+  body > *:not(#printReportMount):not(#rfFormPrintMount) {
     display: none !important;
   }
   #printReportMount {
@@ -2746,6 +2835,42 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
   /* FUSIC HD QUESTIONS: one Q|A per row (10 neat rows; no 4-col pair padding) */
   .print-field-grid.print-field-grid--fusic {
     grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.88fr);
+  }
+  .print-field-grid.print-field-grid--3col {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 1.05fr);
+  }
+  .print-aorta-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.1pt;
+    line-height: 1.25;
+    margin-bottom: 2px;
+    border-top: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    box-sizing: border-box;
+  }
+  .print-aorta-table th,
+  .print-aorta-table td {
+    border-right: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    padding: 2px 5px;
+    text-align: left;
+    word-break: break-word;
+    vertical-align: top;
+  }
+  .print-aorta-table thead th {
+    background: #e8eef5;
+    color: #1e3a5f;
+    font-weight: 700;
+  }
+  .print-aorta-table tbody th {
+    background: #fff;
+    font-weight: 600;
+    color: #222;
+  }
+  .print-aorta-table tbody td {
+    background: #fff;
+    color: #111;
   }
   .print-subhdr-grid {
     grid-column: 1 / -1;
@@ -3123,6 +3248,255 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
     font-style: italic;
   }
 }
+
+/* ─── RF FORM PRINT MOUNT (screen: hidden) ──────────── */
+#rfFormPrintMount {
+  display: none;
+  position: absolute;
+  left: 0; top: 0;
+  width: 0; height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+@media print {
+  #rfFormPrintMount {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    pointer-events: auto;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+
+/* ─── WINDOW VIEW ──────────────────────────────────────── */
+#windowView {
+  display: none;
+  position: fixed;
+  top: var(--header-h);
+  bottom: var(--footer-h);
+  left: 0; right: 0;
+  background: var(--bg);
+  overflow-x: auto;
+  overflow-y: hidden;
+  z-index: 5;
+}
+#windowView.wv-visible {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 10px 10px 10px 10px;
+  align-items: flex-start;
+}
+#mainContent.wv-hidden { display: none; }
+.wv-panel {
+  flex: 0 0 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-y: auto;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow);
+}
+.wv-panel-title {
+  position: sticky;
+  top: 0;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 7px 10px;
+  z-index: 1;
+  flex-shrink: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.wv-panel-body { padding: 8px; }
+.wv-subpanel { border-top: 1px solid var(--border-light); padding: 6px 8px 8px; }
+.wv-subpanel-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+.wv-field { margin-bottom: 5px; }
+.wv-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+.wv-field input[type="number"],
+.wv-field input[type="text"],
+.wv-field textarea,
+.wv-field select {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 13px;
+  font-family: var(--font);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  box-sizing: border-box;
+}
+.wv-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23637892' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+  padding-right: 24px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.wv-field textarea { resize: vertical; min-height: 48px; }
+.wv-field input:focus, .wv-field select:focus, .wv-field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(43,125,233,0.15);
+}
+.wv-checkbox-row { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 5px; }
+.wv-checkbox-item {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--text-mid); cursor: pointer; white-space: nowrap;
+}
+.wv-checkbox-item input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--primary); }
+.wv-rwma-btn { width: 100%; margin-bottom: 5px; }
+#windowViewBtn.wv-btn-active { color: var(--primary); background: var(--primary-xlight); border-radius: 50%; }
+html[data-theme="dark"] .wv-panel-title { background: var(--primary); }
+html[data-theme="dark"] #windowViewBtn.wv-btn-active { background: var(--primary-xlight); }
+html[data-theme="dark"] .wv-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a8b8cc' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Stacked layout (non-compact mode) */
+body:not(.compact-mode) #windowView.wv-visible {
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  align-items: center;
+  gap: 0;
+  padding: 16px;
+  scrollbar-gutter: stable both-edges;
+}
+body:not(.compact-mode) .wv-panel {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 688px;
+  max-height: none;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+}
+body:not(.compact-mode) .wv-panel-title {
+  border-radius: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 13px 16px;
+  cursor: pointer;
+  background: var(--section-hdr);
+  color: var(--section-hdr-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(21,101,168,0.12);
+  transition: background 0.15s;
+}
+body:not(.compact-mode) .wv-panel-title:hover { background: #cfe2f8; }
+body:not(.compact-mode) .wv-panel-title:active { background: #bdd6f5; }
+body:not(.compact-mode) .wv-chevron { display: flex; transition: transform 0.2s; color: var(--primary); }
+body:not(.compact-mode) .wv-chevron svg { width: 18px; height: 18px; }
+body:not(.compact-mode) .wv-panel.wv-panel-collapsed .wv-chevron { transform: rotate(-90deg); }
+.wv-title-inner { display: flex; align-items: center; gap: 8px; }
+.wv-page-header {
+  width: 100%; max-width: 688px;
+  background: var(--primary); color: #fff;
+  padding: 13px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 56px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  border: 2px solid var(--primary-light);
+  border-bottom: none;
+  box-shadow: var(--shadow);
+  margin-bottom: 0;
+  font-size: 14.5px; font-weight: 700; line-height: 1.2;
+  flex-shrink: 0;
+}
+body:not(.compact-mode) .wv-page-header + .wv-panel {
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+body.compact-mode .wv-page-header { display: none; }
+.wv-panel-icon {
+  width: 28px; height: 28px; background: var(--primary); color: #fff;
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+body.compact-mode .wv-panel-icon { display: none; }
+html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title { border-bottom-color: rgba(77,158,255,0.15); }
+html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title:hover { background: #2a3a52; }
+html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title:active { background: #263548; }
+body:not(.compact-mode) .wv-panel.wv-panel-collapsed .wv-panel-body,
+body:not(.compact-mode) .wv-panel.wv-panel-collapsed .wv-subpanel { display: none; }
+#wv-scan-info:not(.wv-panel-collapsed) > .wv-panel-body,
+#wv-demographics:not(.wv-panel-collapsed) > .wv-panel-body,
+#wv-pericardium:not(.wv-panel-collapsed) > .wv-panel-body { display: block; padding: 0; }
+#wv-lungs:not(.wv-panel-collapsed) > #wv-lung-mount { display: block; padding: 0; }
+body:not(.compact-mode) .wv-panel-body {
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 20px;
+  align-items: start;
+}
+body:not(.compact-mode) .wv-subpanel {
+  border-top: none;
+  padding: 0;
+  border-bottom: 1px solid var(--border-light);
+}
+body:not(.compact-mode) .wv-subpanel-title {
+  padding: 6px 16px;
+  background: var(--primary-xlight);
+  border-top: 1px solid var(--border-light);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+body:not(.compact-mode) .wv-subpanel .wv-panel-body { padding: 10px 16px; }
+body:not(.compact-mode) .wv-field { margin-bottom: 0; }
+body:not(.compact-mode) .wv-label { font-size: 11px; }
+body:not(.compact-mode) .wv-field input[type="number"],
+body:not(.compact-mode) .wv-field input[type="text"],
+body:not(.compact-mode) .wv-field textarea,
+body:not(.compact-mode) .wv-field select { padding: 6px 8px; font-size: 14px; }
+body:not(.compact-mode) .wv-checkbox-row { grid-column: 1 / -1; gap: 6px 16px; }
+body:not(.compact-mode) .wv-checkbox-item { font-size: 13px; }
+body:not(.compact-mode) .wv-field:has(.rhythm-chips) { grid-column: 1 / -1; }
+body:not(.compact-mode) .wv-field:has(textarea) { grid-column: 1 / -1; }
+body:not(.compact-mode) .wv-rwma-btn { width: auto; }
+body:not(.compact-mode) .wv-panel-body > .rv-subheading { grid-column: 1 / -1; }
+/* Lung section in stacked mode spans full width */
+body:not(.compact-mode) #wv-lung-mount { grid-column: 1 / -1; padding: 0; }
+/* Chevron hidden in compact/desktop mode */
+body.compact-mode .wv-chevron { display: none; }
+html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title { background: var(--section-hdr); color: var(--section-hdr-text); }
+html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title:hover { background: #2a3a52; }
+html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background: var(--primary-xlight); color: var(--primary-dark); }
 </style>
 </head>
 <body>
@@ -3133,18 +3507,14 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
     <span class="header-title">FUSIC HD <span>Report Generator</span></span>
   </div>
   <div class="header-actions">
-    <button type="button" id="refRangesBtn" title="Reference ranges" aria-label="Open reference ranges">
+    <button type="button" id="windowViewBtn" title="Window-based data entry" aria-label="Toggle window view" aria-pressed="false" onclick="toggleWindowView()">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>
     </button>
-    <button type="button" id="tourBtn" title="Take the tour" aria-label="Start onboarding tour">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+    <button type="button" id="refRangesBtn" title="Reference ranges" aria-label="Open reference ranges">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
     </button>
     <button type="button" id="aboutBtn" title="About" aria-label="About this application">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
-    </button>
-    <button type="button" id="themeToggleBtn" title="Switch to dark mode" aria-label="Switch to dark mode" aria-pressed="false">
-      <span class="theme-icon-moon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
-      <span class="theme-icon-sun" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
     </button>
     <button type="button" id="settingsBtn" title="Settings" aria-label="Open settings">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -3177,6 +3547,10 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
     <button id="closeSettings"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
   </div>
   <div class="settings-body">
+    <button class="btn btn-secondary settings-clear-btn" id="clearBtn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+      Clear all data…
+    </button>
     <div class="settings-group">
       <div class="settings-group-title">Report Fields</div>
       <div class="settings-group-body">
@@ -3346,12 +3720,41 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
               </span>
             </summary>
             <div class="settings-haemo-inner">
-              <p class="settings-machine-cap-desc">Optional aortic valve Doppler: continuity-equation valve area (LVOT cross-sectional area × LVOT VTI ÷ AV VTI). LVOT CSA is shown next to the result for transparency. Needs LVOT diameter (section 2), LVOT VTI and AV VTI (section 5).</p>
+              <p class="settings-machine-cap-desc">Optional aortic valve Doppler measurements. Continuity-equation valve area (LVOT CSA × LVOT VTI ÷ AV VTI) — needs LVOT diameter (section 2), LVOT VTI and AV VTI (section 5). AV VMax and LVOT VMax (peak velocities, m/s) provide a VMax-based dimensionless index when VTI values are unavailable.</p>
               <p class="settings-toggle-hint settings-measure-master-hint">Master switch above turns every option below on or off together.</p>
               <div class="settings-haemo-children">
                 <div class="toggle-row">
                   <div><div class="toggle-label">Aortic valve area (continuity)</div><div class="settings-toggle-hint">LVOT CSA × (LVOT VTI ÷ AV VTI), cm²</div></div>
                   <label class="toggle-switch"><input type="checkbox" id="toggle-show-ava-continuity"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                </div>
+                <div class="toggle-row">
+                  <div><div class="toggle-label">AV VMax</div><div class="settings-toggle-hint">Aortic valve peak velocity (CWD), m/s</div></div>
+                  <label class="toggle-switch"><input type="checkbox" id="toggle-show-av-vmax"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                </div>
+                <div class="toggle-row">
+                  <div><div class="toggle-label">LVOT VMax</div><div class="settings-toggle-hint">LVOT peak velocity (PWD), m/s — used as DI fallback if VTI values unavailable</div></div>
+                  <label class="toggle-switch"><input type="checkbox" id="toggle-show-lvot-vmax"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                </div>
+              </div>
+            </div>
+          </details>
+          <details class="settings-haemodynamics-details">
+            <summary class="settings-measure-details-summary">
+              <span class="settings-measure-summary-row">
+                <span class="settings-measure-summary-left">
+                  <span class="settings-measure-chevron" aria-hidden="true">&#9654;</span>
+                  <span class="settings-measure-title">Aorta</span>
+                </span>
+                <label class="toggle-switch settings-measure-master-toggle" onclick="event.stopPropagation()"><input type="checkbox" id="toggle-aorta-measures-all"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+              </span>
+            </summary>
+            <div class="settings-haemo-inner">
+              <p class="settings-machine-cap-desc">Optional detailed aortic assessment. When enabled, the abdominal aorta is subdivided into Proximal, Mid, and Distal segments, plus Right and Left common iliac arteries — each with diameter, dissection flap, and colour flow pattern. The PDF export shows these in a separate table below the main aortic table.</p>
+              <p class="settings-toggle-hint settings-measure-master-hint">Master switch above turns every option below on or off together.</p>
+              <div class="settings-haemo-children">
+                <div class="toggle-row">
+                  <div><div class="toggle-label">Detailed Aortic Assessment</div><div class="settings-toggle-hint">Subdivides abdominal aorta into Proximal, Mid, Distal, Right and Left common iliac</div></div>
+                  <label class="toggle-switch"><input type="checkbox" id="toggle-show-aorta-detailed"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
                 </div>
               </div>
             </div>
@@ -3398,6 +3801,13 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
             <div class="settings-toggle-hint">Reduces vertical space and uses the full screen width on desktop, fitting more fields into view and minimising scrolling. No effect on mobile.</div>
           </div>
           <label class="toggle-switch"><input type="checkbox" id="toggle-compact-mode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Dark mode</div>
+            <div class="settings-toggle-hint">Switches the interface to a dark colour scheme.</div>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="toggle-dark-mode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
       </div>
     </div>
@@ -4357,7 +4767,7 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
       <div class="valve-grid">
         <!-- Row 1: Mitral | Aortic; Row 2: Tricuspid | Pulmonary -->
         <div class="valve-card">
-          <div class="valve-card-title">🫀 Mitral</div>
+          <div class="valve-card-title">Mitral</div>
           <div class="field-group"><label class="field-label" for="f-mvSten">Opening</label><select id="f-mvSten"><option value="">— Select —</option><option>Normal</option><option>Restricted</option><option>Very Restricted</option></select></div>
           <div class="field-group"><label class="field-label" for="f-mvApp">Appearance</label><select id="f-mvApp"><option value="">— Select —</option><option>Thin</option><option>Thick</option><option>Calcified</option><option>Thick and Calcified</option><option>?Mass</option></select></div>
           <div class="field-group"><label class="field-label" for="f-mvReg">Regurgitation</label><select id="f-mvReg"><option value="">— Select —</option><option>Nil visualised</option><option>Trivial/Trace</option><option>Present but unlikely to be HD compromising</option><option>Significant</option><option>Very Significant</option></select></div>
@@ -4368,7 +4778,7 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
           </div>
         </div>
         <div class="valve-card">
-          <div class="valve-card-title">🫀 Aortic</div>
+          <div class="valve-card-title">Aortic</div>
           <div class="field-group"><label class="field-label" for="f-avSten">Opening</label><select id="f-avSten"><option value="">— Select —</option><option>Normal</option><option>Restricted</option><option>Very Restricted</option></select></div>
           <div class="field-group"><label class="field-label" for="f-avApp">Appearance</label><select id="f-avApp"><option value="">— Select —</option><option>Thin</option><option>Thick</option><option>Calcified</option><option>Thick and Calcified</option><option>?Mass</option></select></div>
           <div class="field-group"><label class="field-label" for="f-avReg">Regurgitation</label><select id="f-avReg"><option value="">— Select —</option><option>Nil visualised</option><option>Trivial/Trace</option><option>Present but unlikely to be HD compromising</option><option>Significant</option><option>Very Significant</option></select></div>
@@ -4378,11 +4788,19 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
               <input type="number" id="f-avVTI" placeholder="e.g. 25" min="0" max="120" step="0.1" oninput="recalcDI()">
             </div>
           </div>
+          <div id="av-vmax-field-wrap" class="field-group section-hidden">
+            <label class="field-label" for="f-avVMax">AV VMax <span class="unit">(m/s)</span></label>
+            <input type="number" id="f-avVMax" placeholder="e.g. 4.0" min="0" max="10" step="0.01" oninput="recalcDI()">
+          </div>
           <div id="mc-pwd-lvot-valve-wrap" class="mc-doppler-wrap">
             <div class="field-group">
               <label class="field-label" for="f-lvotVTI-valve">LVOT VTI <span class="unit">(cm)</span></label>
               <input type="number" id="f-lvotVTI-valve" placeholder="e.g. 18" min="0" max="60" step="0.1" oninput="mirrorLVOTVTI('f-lvotVTI-valve')" onchange="mirrorLVOTVTI('f-lvotVTI-valve')">
             </div>
+          </div>
+          <div id="lvot-vmax-field-wrap" class="field-group section-hidden">
+            <label class="field-label" for="f-lvotVMax">LVOT VMax <span class="unit">(m/s)</span></label>
+            <input type="number" id="f-lvotVMax" placeholder="e.g. 1.0" min="0" max="5" step="0.01" oninput="recalcDI()">
           </div>
           <div id="mc-di-wrap" class="mc-doppler-wrap">
             <div class="field-group">
@@ -4409,7 +4827,7 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
           </div>
         </div>
         <div class="valve-card">
-          <div class="valve-card-title">🫀 Tricuspid</div>
+          <div class="valve-card-title">Tricuspid</div>
           <div class="field-group"><label class="field-label" for="f-tvSten">Opening</label><select id="f-tvSten"><option value="">— Select —</option><option>Normal</option><option>Restricted</option><option>Very Restricted</option></select></div>
           <div class="field-group"><label class="field-label" for="f-tvApp">Appearance</label><select id="f-tvApp"><option value="">— Select —</option><option>Thin</option><option>Thick</option><option>Calcified</option><option>Thick and Calcified</option><option>?Mass</option></select></div>
           <div class="field-group"><label class="field-label" for="f-tvReg">Regurgitation</label><select id="f-tvReg"><option value="">— Select —</option><option>Nil visualised</option><option>Trivial/Trace</option><option>Present but unlikely to be HD compromising</option><option>Significant</option><option>Very Significant</option></select></div>
@@ -4421,7 +4839,7 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
           </div>
         </div>
         <div class="valve-card">
-          <div class="valve-card-title">🫀 Pulmonary</div>
+          <div class="valve-card-title">Pulmonary</div>
           <div class="field-group"><label class="field-label" for="f-pvSten">Opening</label><select id="f-pvSten"><option value="">— Select —</option><option>Normal</option><option>Restricted</option><option>Very Restricted</option></select></div>
           <div class="field-group"><label class="field-label" for="f-pvApp">Appearance</label><select id="f-pvApp"><option value="">— Select —</option><option>Thin</option><option>Thick</option><option>Calcified</option><option>Thick and Calcified</option><option>?Mass</option></select></div>
           <div class="field-group"><label class="field-label" for="f-pvReg">Regurgitation</label><select id="f-pvReg"><option value="">— Select —</option><option>Nil visualised</option><option>Trivial/Trace</option><option>Present but unlikely to be HD compromising</option><option>Significant</option><option>Very Significant</option></select></div>
@@ -4503,10 +4921,57 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
         </div>
         <div class="aorta-card aorta-card-full" id="aorta-card-abd">
           <div class="aorta-card-title">Abdominal</div>
-          <div class="field-row three-col">
-            <div class="field-group"><label class="field-label" for="f-aortaAbdDiam">Diameter <span class="unit">(mm)</span></label><input type="number" id="f-aortaAbdDiam" placeholder="e.g. 20" min="0" step="0.1" oninput="checkAortaCards()"></div>
-            <div class="field-group"><label class="field-label" for="f-aortaAbdFlap">Dissection flap</label><select id="f-aortaAbdFlap" onchange="checkAortaCards()"><option value="">— Select —</option><option>Absent</option><option>Present</option></select></div>
-            <div class="field-group"><label class="field-label" for="f-aortaAbdFlow">Colour flow pattern</label><select id="f-aortaAbdFlow" onchange="checkAortaCards()"><option value="">— Select —</option><option>Normal</option><option>Abnormal</option></select></div>
+          <div id="aorta-abd-summary-fields">
+            <div class="field-row three-col">
+              <div class="field-group"><label class="field-label" for="f-aortaAbdDiam">Diameter <span class="unit">(mm)</span></label><input type="number" id="f-aortaAbdDiam" placeholder="e.g. 20" min="0" step="0.1" oninput="checkAortaCards()"></div>
+              <div class="field-group"><label class="field-label" for="f-aortaAbdFlap">Dissection flap</label><select id="f-aortaAbdFlap" onchange="checkAortaCards()"><option value="">— Select —</option><option>Absent</option><option>Present</option></select></div>
+              <div class="field-group"><label class="field-label" for="f-aortaAbdFlow">Colour flow pattern</label><select id="f-aortaAbdFlow" onchange="checkAortaCards()"><option value="">— Select —</option><option>Normal</option><option>Abnormal</option></select></div>
+            </div>
+          </div>
+          <div id="aorta-detailed-fields-wrap" class="section-hidden">
+            <div style="border-top:1px solid var(--border-light);padding-top:8px;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.06em;">Detailed Abdominal Assessment</div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-mid);margin-bottom:3px;">Proximal</div>
+                <div class="field-row three-col">
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdProxDiam">Diameter <span class="unit">(mm)</span></label><input type="number" id="f-aortaAbdProxDiam" placeholder="e.g. 20" min="0" step="0.1"></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdProxFlap">Dissection flap</label><select id="f-aortaAbdProxFlap"><option value="">— Select —</option><option>Absent</option><option>Present</option></select></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdProxFlow">Colour flow pattern</label><select id="f-aortaAbdProxFlow"><option value="">— Select —</option><option>Normal</option><option>Abnormal</option></select></div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-mid);margin-bottom:3px;">Mid</div>
+                <div class="field-row three-col">
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdMidDiam">Diameter <span class="unit">(mm)</span></label><input type="number" id="f-aortaAbdMidDiam" placeholder="e.g. 20" min="0" step="0.1"></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdMidFlap">Dissection flap</label><select id="f-aortaAbdMidFlap"><option value="">— Select —</option><option>Absent</option><option>Present</option></select></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdMidFlow">Colour flow pattern</label><select id="f-aortaAbdMidFlow"><option value="">— Select —</option><option>Normal</option><option>Abnormal</option></select></div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-mid);margin-bottom:3px;">Distal</div>
+                <div class="field-row three-col">
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdDistDiam">Diameter <span class="unit">(mm)</span></label><input type="number" id="f-aortaAbdDistDiam" placeholder="e.g. 20" min="0" step="0.1"></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdDistFlap">Dissection flap</label><select id="f-aortaAbdDistFlap"><option value="">— Select —</option><option>Absent</option><option>Present</option></select></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaAbdDistFlow">Colour flow pattern</label><select id="f-aortaAbdDistFlow"><option value="">— Select —</option><option>Normal</option><option>Abnormal</option></select></div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-mid);margin-bottom:3px;">Right common iliac</div>
+                <div class="field-row three-col">
+                  <div class="field-group"><label class="field-label" for="f-aortaRIliacDiam">Diameter <span class="unit">(mm)</span></label><input type="number" id="f-aortaRIliacDiam" placeholder="e.g. 15" min="0" step="0.1"></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaRIliacFlap">Dissection flap</label><select id="f-aortaRIliacFlap"><option value="">— Select —</option><option>Absent</option><option>Present</option></select></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaRIliacFlow">Colour flow pattern</label><select id="f-aortaRIliacFlow"><option value="">— Select —</option><option>Normal</option><option>Abnormal</option></select></div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text-mid);margin-bottom:3px;">Left common iliac</div>
+                <div class="field-row three-col">
+                  <div class="field-group"><label class="field-label" for="f-aortaLIliacDiam">Diameter <span class="unit">(mm)</span></label><input type="number" id="f-aortaLIliacDiam" placeholder="e.g. 15" min="0" step="0.1"></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaLIliacFlap">Dissection flap</label><select id="f-aortaLIliacFlap"><option value="">— Select —</option><option>Absent</option><option>Present</option></select></div>
+                  <div class="field-group"><label class="field-label" for="f-aortaLIliacFlow">Colour flow pattern</label><select id="f-aortaLIliacFlow"><option value="">— Select —</option><option>Normal</option><option>Abnormal</option></select></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -4737,11 +5202,14 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
 
 </main>
 
+<!-- ══════════ WINDOW VIEW ════════════════════════════ -->
+<div id="windowView" aria-label="Window-based data entry"></div>
+
 <!-- ══════════ STICKY FOOTER ═══════════════════════════ -->
 <div id="stickyFooter">
-  <button class="btn btn-secondary" id="clearBtn">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
-    Clear
+  <button class="btn btn-secondary" id="secNavBtn" aria-label="Go to section" title="Go to section">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+    <span id="secNavBtnLabel">Sections</span>
   </button>
   <div class="footer-export-split" id="exportSplitWrap">
     <button type="button" class="btn btn-primary footer-export-primary" id="exportBtn" title="Export report — full descriptions" aria-haspopup="dialog">
@@ -4752,8 +5220,9 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="footer-export-dropdown" id="exportDropdown" role="menu" aria-hidden="true">
-      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="clipboard-text">Plain text — copy to clipboard</button>
-      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="plain-text-page">Plain text — full page (select & copy)</button>
+      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="clipboard-text">Plain text (copy to clipboard)</button>
+      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="plain-text-page">Plain text (full page view)</button>
+      <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="rf-form">Reporting Form (paper form style)</button>
       <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="print-pdf">Print / Save as PDF (A4)<span class="export-attached-img-badge" title="Study has images attached" aria-label="Study has images attached"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span></button>
       <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="edec">BSE/EDEC Style Report<span class="export-attached-img-badge" title="Study has images attached" aria-label="Study has images attached"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span></button>
       <button type="button" class="footer-export-menu-item" role="menuitem" data-export-format="xlsx">Excel workbook (.xlsx)</button>
@@ -4772,6 +5241,19 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
       <button class="btn btn-secondary" onclick="closeClearModal()">Cancel</button>
       <button class="btn btn-danger" onclick="confirmClear()">Yes, Clear All</button>
     </div>
+  </div>
+</div>
+
+<!-- ══════════ SECTION NAVIGATOR ════════════════════════ -->
+<div class="sec-nav-overlay" id="secNavOverlay" aria-modal="true" role="dialog" aria-label="Go to section">
+  <div class="sec-nav-sheet">
+    <div class="sec-nav-header">
+      <span class="sec-nav-title">Go to section</span>
+      <button class="sec-nav-close" id="secNavClose" aria-label="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sec-nav-list" id="secNavList"></div>
   </div>
 </div>
 
@@ -4818,7 +5300,7 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </span>
           <div class="export-format-text">
-            <h3>Plain text — copy to clipboard</h3>
+            <h3>Plain text (copy to clipboard)</h3>
             <p>Full-text report copied in one click.</p>
           </div>
           <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('clipboard-text')">Copy</button>
@@ -4828,7 +5310,7 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
           </span>
           <div class="export-format-text">
-            <h3>Plain text — full page</h3>
+            <h3>Plain text (full page view)</h3>
             <p>Opens the text report to select and copy manually.</p>
           </div>
           <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('plain-text-page')">Open</button>
@@ -4842,6 +5324,16 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
             <p>Browser print dialog with a compact A4 layout.</p>
           </div>
           <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('print-pdf')">Print</button>
+        </li>
+        <li class="export-format-row">
+          <span class="export-format-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+          </span>
+          <div class="export-format-text">
+            <h3>Reporting Form (paper form style)</h3>
+            <p>Fills in the FUSIC HD paper reporting form layout. Save as PDF via the print dialog.</p>
+          </div>
+          <button type="button" class="btn btn-secondary export-format-action" onclick="triggerExportFromModal('rf-form')">Print</button>
         </li>
         <li class="export-format-row">
           <span class="export-format-icon" aria-hidden="true">
@@ -4907,6 +5399,12 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
         <input type="file" id="exportImagesFileInput" accept="image/png,image/jpeg,image/gif" multiple>
       </label>
       <p class="export-images-empty" id="exportImagesEmpty">No images attached yet.</p>
+      <div class="export-images-add-header-wrap" id="exportImagesAddHeaderWrap" hidden>
+        <button type="button" id="exportImagesAddHeaderBtn" class="btn btn-secondary export-images-add-header-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="9" y2="12"/></svg>
+          Insert section header
+        </button>
+      </div>
       <ul class="export-images-list" id="exportImagesList" aria-label="Attached images (drag to reorder)"></ul>
      </div>
     </div>
@@ -4992,12 +5490,16 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
 <div class="modal-overlay" id="aboutModal" onclick="if(event.target===this)closeAbout()">
   <div class="modal-box modal-box--about" role="dialog" aria-labelledby="aboutModalTitle" onclick="event.stopPropagation()">
     <div class="about-modal-header">
-      <h2 id="aboutModalTitle">About</h2>
+      <h2 id="aboutModalTitle">Using the Report Generator</h2>
       <button type="button" class="about-modal-close" onclick="closeAbout()" aria-label="Close About">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
     <div class="about-modal-body">
+      <button type="button" class="btn btn-secondary" style="width:100%;justify-content:center;margin-bottom:12px;" onclick="closeAbout();startTour()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;margin-right:6px;" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        Take the tour
+      </button>
       <div class="about-version" aria-label="Application version">
         <span class="about-version-label">Version</span>
         <span class="about-version-num">0.18</span>
@@ -5115,10 +5617,11 @@ html[data-theme="dark"] .disclaimer-edit-textarea { background: var(--surface); 
 <div id="toast"></div>
 
 <div id="printReportMount" aria-hidden="true"></div>
+<div id="rfFormPrintMount" aria-hidden="true"></div>
 <div id="fusicPrintMask" aria-hidden="true">Preparing PDF…</div>
 
 <!-- ══════════ SCRIPTS ══════════════════════════════════ -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script>
 // ─── RHYTHM OPTIONS ────────────────────────────────────
 const RHYTHMS = [
@@ -5661,6 +6164,8 @@ const EDEC_MEAS_GROUPS = [
   ]},
   { title: 'Aortic Valve', rows: [
     ['AV VTI', 'f-avVTI', 'cm'],
+    ['AV VMax', 'f-avVMax', 'm/s', { toggleId: 'toggle-show-av-vmax' }],
+    ['LVOT VMax', 'f-lvotVMax', 'm/s', { toggleId: 'toggle-show-lvot-vmax' }],
     ['DI', 'di-display-input', ''],
     ['AVA (cont.)', 'ava-continuity-display-input', 'cm²', { toggleId: 'toggle-show-ava-continuity' }],
   ]},
@@ -5680,6 +6185,11 @@ const EDEC_MEAS_GROUPS = [
     ['Arch', 'f-aortaArchDiam', 'mm'],
     ['Descending', 'f-aortaDescDiam', 'mm'],
     ['Abdominal', 'f-aortaAbdDiam', 'mm'],
+    ['Abd. Proximal', 'f-aortaAbdProxDiam', 'mm', { toggleId: 'toggle-show-aorta-detailed' }],
+    ['Abd. Mid', 'f-aortaAbdMidDiam', 'mm', { toggleId: 'toggle-show-aorta-detailed' }],
+    ['Abd. Distal', 'f-aortaAbdDistDiam', 'mm', { toggleId: 'toggle-show-aorta-detailed' }],
+    ['R. common iliac', 'f-aortaRIliacDiam', 'mm', { toggleId: 'toggle-show-aorta-detailed' }],
+    ['L. common iliac', 'f-aortaLIliacDiam', 'mm', { toggleId: 'toggle-show-aorta-detailed' }],
   ]},
 ];
 
@@ -6268,6 +6778,10 @@ const SESSION_DRAFT_TOGGLE_IDS = [
   'toggle-valve-measures-all',
   'toggle-nonfusic-measures-all',
   'toggle-show-ava-continuity',
+  'toggle-show-av-vmax',
+  'toggle-show-lvot-vmax',
+  'toggle-aorta-measures-all',
+  'toggle-show-aorta-detailed',
   'toggle-omit-empty-export',
   'toggle-export-summary-near-top',
   'toggle-export-nonfusic-disclaimer',
@@ -6291,7 +6805,12 @@ const LV_MEASURES_CHILD_TOGGLE_IDS = [
   'toggle-show-lvidd-indexed'
 ];
 const VALVE_MEASURES_CHILD_TOGGLE_IDS = [
-  'toggle-show-ava-continuity'
+  'toggle-show-ava-continuity',
+  'toggle-show-av-vmax',
+  'toggle-show-lvot-vmax'
+];
+const AORTA_MEASURES_CHILD_TOGGLE_IDS = [
+  'toggle-show-aorta-detailed'
 ];
 const RH_MEASURES_CHILD_TOGGLE_IDS = [
   'toggle-show-pasp-field',
@@ -6307,7 +6826,8 @@ const NONFUSIC_MEASURES_ALL_CHILD_TOGGLE_IDS = [
   ...HAEMODYNAMICS_CHILD_TOGGLE_IDS,
   ...LAP_MEASURES_CHILD_TOGGLE_IDS,
   ...RH_MEASURES_CHILD_TOGGLE_IDS,
-  ...VALVE_MEASURES_CHILD_TOGGLE_IDS
+  ...VALVE_MEASURES_CHILD_TOGGLE_IDS,
+  ...AORTA_MEASURES_CHILD_TOGGLE_IDS
 ];
 /* Indexed non-FUSIC HD measurements.
    `requiresId` = the toggle that gates the base measurement. If null, the base
@@ -6333,7 +6853,9 @@ const NONFUSIC_MEASURE_CAP_REQS = {
   'toggle-show-pasp-field':       ['cwd'],
   'toggle-show-tapse-pasp-ratio': ['cwd'],
   'toggle-show-rvot-vti':         ['pwd'],
-  'toggle-show-ava-continuity':   ['cwd', 'pwd']
+  'toggle-show-ava-continuity':   ['cwd', 'pwd'],
+  'toggle-show-av-vmax':          ['cwd'],
+  'toggle-show-lvot-vmax':        ['pwd']
 };
 function isNonfusicToggleAvailable(id) {
   const reqs = NONFUSIC_MEASURE_CAP_REQS[id] || [];
@@ -6355,6 +6877,7 @@ let _syncingLAPMaster = false;
 let _syncingLVMaster = false;
 let _syncingValveMaster = false;
 let _syncingRHMaster = false;
+let _syncingAortaMaster = false;
 let _syncingNonfusicMeasuresGlobalMaster = false;
 let _syncingNonfusicIndexedMaster = false;
 let sessionRestoreInProgress = false;
@@ -6398,24 +6921,19 @@ function initCompactModeToggle() {
 }
 
 function initThemeToggle() {
-  const btn = document.getElementById('themeToggleBtn');
-  if (!btn) return;
+  const chk = document.getElementById('toggle-dark-mode');
+  if (!chk) return;
   const sync = () => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
-    const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
-    btn.title = label;
-    btn.setAttribute('aria-label', label);
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light');
-    } catch (e) {}
+    chk.checked = isDark;
+    try { localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light'); } catch (e) {}
   };
   sync();
-  btn.addEventListener('click', () => {
-    if (document.documentElement.getAttribute('data-theme') === 'dark') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
+  chk.addEventListener('change', () => {
+    if (chk.checked) {
       document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
     }
     sync();
   });
@@ -6471,6 +6989,10 @@ document.addEventListener('DOMContentLoaded', () => {
   VALVE_MEASURES_CHILD_TOGGLE_IDS.forEach(id => {
     document.getElementById(id)?.addEventListener('change', onValveMeasuresChildToggleChange);
   });
+  document.getElementById('toggle-aorta-measures-all')?.addEventListener('change', onAortaMasterChange);
+  AORTA_MEASURES_CHILD_TOGGLE_IDS.forEach(id => {
+    document.getElementById(id)?.addEventListener('change', onAortaChildToggleChange);
+  });
   document.getElementById('toggle-nonfusic-measures-all')?.addEventListener('change', onNonfusicMeasuresGlobalMasterChange);
   document.getElementById('toggle-nonfusic-indexed-measures')?.addEventListener('change', onNonfusicIndexedMasterChange);
   document.getElementById('toggle-machine-cwd')?.addEventListener('change', refreshMachineCapabilityFields);
@@ -6485,7 +7007,6 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshAnonymiseEntrypointButtons();
 
   document.getElementById('scanInfoCollapseAllBtn')?.addEventListener('click', toggleAllCollapsibleSections);
-  document.getElementById('tourBtn')?.addEventListener('click', startTour);
   document.getElementById('tourSkipBtn')?.addEventListener('click', endTour);
   document.getElementById('tourBackBtn')?.addEventListener('click', tourBack);
   document.getElementById('tourNextBtn')?.addEventListener('click', tourNext);
@@ -6494,6 +7015,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   updateScanInfoCollapseAllButton();
 
+  document.getElementById('settingsPanel')?.addEventListener('change', () => setTimeout(wvRefreshFieldVisibility, 0));
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document.getElementById('refRangesBtn')?.addEventListener('click', openReferenceRanges);
   document.getElementById('refRangesCloseBtn')?.addEventListener('click', closeReferenceRanges);
@@ -6504,6 +7026,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('closeSettings').addEventListener('click', closeSettings);
   document.getElementById('overlay').addEventListener('click', closeSettings);
   document.getElementById('clearBtn').addEventListener('click', () => document.getElementById('clearModal').classList.add('open'));
+  document.getElementById('secNavBtn').addEventListener('click', openSecNav);
+  document.getElementById('secNavClose').addEventListener('click', closeSecNav);
+  document.getElementById('secNavOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSecNav(); });
   document.getElementById('populateTestDataBtn')?.addEventListener('click', populateDebugTestData);
   document.getElementById('populateTestDataBBtn')?.addEventListener('click', populateDebugTestDataB);
   initExportSplitControl();
@@ -6615,23 +7140,26 @@ function getVisibleTamponadeOptions() {
 }
 
 function buildTamponadeChips() {
-  const c = document.getElementById('tamponadeChips');
-  if (!c) return;
   const visible = getVisibleTamponadeOptions();
   [...selectedTamponade].forEach(t => { if (!visible.includes(t)) selectedTamponade.delete(t); });
-  c.innerHTML = '';
-  visible.forEach(t => {
-    const chip = document.createElement('span');
-    chip.className = 'rhythm-chip';
-    chip.textContent = t;
-    if (selectedTamponade.has(t)) chip.classList.add('selected');
-    chip.addEventListener('click', () => {
-      if (selectedTamponade.has(t)) { selectedTamponade.delete(t); chip.classList.remove('selected'); }
-      else { selectedTamponade.add(t); chip.classList.add('selected'); }
-      updateTamponadeSummary();
-      updatePeriTamponadeAlert();
+  const containerIds = ['tamponadeChips', ...(WV_EXTRA_CHIP_CONTAINERS.tamponadeChips || [])];
+  containerIds.forEach(cid => {
+    const c = document.getElementById(cid);
+    if (!c) return;
+    c.innerHTML = '';
+    visible.forEach(t => {
+      const chip = document.createElement('span');
+      chip.className = 'rhythm-chip';
+      chip.textContent = t;
+      if (selectedTamponade.has(t)) chip.classList.add('selected');
+      chip.addEventListener('click', () => {
+        if (selectedTamponade.has(t)) selectedTamponade.delete(t); else selectedTamponade.add(t);
+        buildTamponadeChips();
+        updateTamponadeSummary();
+        updatePeriTamponadeAlert();
+      });
+      c.appendChild(chip);
     });
-    c.appendChild(chip);
   });
   updateTamponadeSummary();
   updatePeriTamponadeAlert();
@@ -6749,22 +7277,25 @@ function getVisibleLVOTOFeatures() {
 }
 
 function buildLVOTOChips() {
-  const c = document.getElementById('lvotoChips');
-  if (!c) return;
   const visible = getVisibleLVOTOFeatures();
   [...selectedLVOTO].forEach(f => { if (!visible.includes(f)) selectedLVOTO.delete(f); });
-  c.innerHTML = '';
-  visible.forEach(f => {
-    const chip = document.createElement('span');
-    chip.className = 'rhythm-chip';
-    chip.textContent = f;
-    if (selectedLVOTO.has(f)) chip.classList.add('selected');
-    chip.addEventListener('click', () => {
-      if (selectedLVOTO.has(f)) { selectedLVOTO.delete(f); chip.classList.remove('selected'); }
-      else { selectedLVOTO.add(f); chip.classList.add('selected'); }
-      updateLVOTOSummary();
+  const containerIds = ['lvotoChips', ...(WV_EXTRA_CHIP_CONTAINERS.lvotoChips || [])];
+  containerIds.forEach(cid => {
+    const c = document.getElementById(cid);
+    if (!c) return;
+    c.innerHTML = '';
+    visible.forEach(f => {
+      const chip = document.createElement('span');
+      chip.className = 'rhythm-chip';
+      chip.textContent = f;
+      if (selectedLVOTO.has(f)) chip.classList.add('selected');
+      chip.addEventListener('click', () => {
+        if (selectedLVOTO.has(f)) selectedLVOTO.delete(f); else selectedLVOTO.add(f);
+        buildLVOTOChips();
+        updateLVOTOSummary();
+      });
+      c.appendChild(chip);
     });
-    c.appendChild(chip);
   });
   updateLVOTOSummary();
 }
@@ -6790,10 +7321,13 @@ function updatePHTBasicSummary() {
 }
 
 function applyPHTBasicChipDOM() {
-  const c = document.getElementById('phtBasicChips');
-  if (!c) return;
-  c.querySelectorAll('.rhythm-chip').forEach(chip => {
-    chip.classList.toggle('selected', selectedPHTBasic.has(chip.textContent));
+  const containerIds = ['phtBasicChips', ...(WV_EXTRA_CHIP_CONTAINERS.phtBasicChips || [])];
+  containerIds.forEach(cid => {
+    const c = document.getElementById(cid);
+    if (!c) return;
+    c.querySelectorAll('.rhythm-chip').forEach(chip => {
+      chip.classList.toggle('selected', selectedPHTBasic.has(chip.textContent));
+    });
   });
   updatePHTBasicSummary();
 }
@@ -6824,19 +7358,22 @@ function syncPHTBasicAutoSelections() {
 }
 
 function buildPHTBasicChips() {
-  const c = document.getElementById('phtBasicChips');
-  if (!c) return;
-  c.innerHTML = '';
-  PHT_BASIC_FEATURES.forEach(f => {
-    const chip = document.createElement('span');
-    chip.className = 'rhythm-chip';
-    chip.textContent = f;
-    chip.addEventListener('click', () => {
-      if (selectedPHTBasic.has(f)) { selectedPHTBasic.delete(f); chip.classList.remove('selected'); }
-      else { selectedPHTBasic.add(f); chip.classList.add('selected'); }
-      updatePHTBasicSummary();
+  const containerIds = ['phtBasicChips', ...(WV_EXTRA_CHIP_CONTAINERS.phtBasicChips || [])];
+  containerIds.forEach(cid => {
+    const c = document.getElementById(cid);
+    if (!c) return;
+    c.innerHTML = '';
+    PHT_BASIC_FEATURES.forEach(f => {
+      const chip = document.createElement('span');
+      chip.className = 'rhythm-chip';
+      chip.textContent = f;
+      chip.addEventListener('click', () => {
+        if (selectedPHTBasic.has(f)) selectedPHTBasic.delete(f); else selectedPHTBasic.add(f);
+        buildPHTBasicChips();
+        updatePHTBasicSummary();
+      });
+      c.appendChild(chip);
     });
-    c.appendChild(chip);
   });
   syncPHTBasicAutoSelections();
 }
@@ -6867,22 +7404,25 @@ function syncPHTAdvancedAutoSelections() {
 }
 
 function buildPHTAdvancedChips() {
-  const c = document.getElementById('phtAdvChips');
-  if (!c) return;
   const visible = getVisiblePHTAdvancedFeatures();
   [...selectedPHTAdvanced].forEach(f => { if (!visible.includes(f)) selectedPHTAdvanced.delete(f); });
-  c.innerHTML = '';
-  visible.forEach(f => {
-    const chip = document.createElement('span');
-    chip.className = 'rhythm-chip';
-    chip.textContent = f;
-    if (selectedPHTAdvanced.has(f)) chip.classList.add('selected');
-    chip.addEventListener('click', () => {
-      if (selectedPHTAdvanced.has(f)) { selectedPHTAdvanced.delete(f); chip.classList.remove('selected'); }
-      else { selectedPHTAdvanced.add(f); chip.classList.add('selected'); }
-      updatePHTAdvancedSummary();
+  const containerIds = ['phtAdvChips', ...(WV_EXTRA_CHIP_CONTAINERS.phtAdvChips || [])];
+  containerIds.forEach(cid => {
+    const c = document.getElementById(cid);
+    if (!c) return;
+    c.innerHTML = '';
+    visible.forEach(f => {
+      const chip = document.createElement('span');
+      chip.className = 'rhythm-chip';
+      chip.textContent = f;
+      if (selectedPHTAdvanced.has(f)) chip.classList.add('selected');
+      chip.addEventListener('click', () => {
+        if (selectedPHTAdvanced.has(f)) selectedPHTAdvanced.delete(f); else selectedPHTAdvanced.add(f);
+        buildPHTAdvancedChips();
+        updatePHTAdvancedSummary();
+      });
+      c.appendChild(chip);
     });
-    c.appendChild(chip);
   });
   syncPHTAdvancedAutoSelections();
 }
@@ -7082,6 +7622,7 @@ function buildLungGrid() {
         refreshLungGridAllRows();
         updateLeftLungPESubVisibility();
         updateRightLungPESubVisibility();
+        syncBLinesFieldFromLungGrid();
       });
       td.appendChild(btn);
       tr.appendChild(td);
@@ -7108,35 +7649,58 @@ function refreshLungGridAllRows() {
   updateRightLungSummary();
 }
 
+function syncBLinesFieldFromLungGrid() {
+  const hasLeft = selectedLeftLung.has('B-Lines (Focal)') || selectedLeftLung.has('B-Lines (Widespread)');
+  const hasRight = selectedRightLung.has('B-Lines (Focal)') || selectedRightLung.has('B-Lines (Widespread)');
+  const el = document.getElementById('f-bLinesLung');
+  if (!el) return;
+  const newVal = (hasLeft && hasRight) ? 'Yes - Bilateral'
+               : (hasLeft || hasRight) ? 'Yes - Focal/Unilateral'
+               : '';
+  if (el.value !== newVal) {
+    el.value = newVal;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    if (_wvActive) wvRefreshAllProxies();
+  }
+}
+
 function buildLeftLungPEQualChips() {
-  const c = document.getElementById('leftLungPEQualChips');
-  if (!c) return;
-  c.innerHTML = '';
-  LUNG_PE_QUALIFIERS.forEach(f => {
-    const chip = document.createElement('span');
-    chip.className = 'rhythm-chip';
-    chip.textContent = f;
-    chip.addEventListener('click', () => {
-      if (selectedLeftLungPEQual.has(f)) { selectedLeftLungPEQual.delete(f); chip.classList.remove('selected'); }
-      else { selectedLeftLungPEQual.add(f); chip.classList.add('selected'); }
+  const containerIds = ['leftLungPEQualChips', ...(WV_EXTRA_CHIP_CONTAINERS.leftLungPEQualChips || [])];
+  containerIds.forEach(cid => {
+    const c = document.getElementById(cid);
+    if (!c) return;
+    c.innerHTML = '';
+    LUNG_PE_QUALIFIERS.forEach(f => {
+      const chip = document.createElement('span');
+      chip.className = 'rhythm-chip';
+      chip.textContent = f;
+      if (selectedLeftLungPEQual.has(f)) chip.classList.add('selected');
+      chip.addEventListener('click', () => {
+        if (selectedLeftLungPEQual.has(f)) selectedLeftLungPEQual.delete(f); else selectedLeftLungPEQual.add(f);
+        buildLeftLungPEQualChips();
+      });
+      c.appendChild(chip);
     });
-    c.appendChild(chip);
   });
 }
 
 function buildRightLungPEQualChips() {
-  const c = document.getElementById('rightLungPEQualChips');
-  if (!c) return;
-  c.innerHTML = '';
-  LUNG_PE_QUALIFIERS.forEach(f => {
-    const chip = document.createElement('span');
-    chip.className = 'rhythm-chip';
-    chip.textContent = f;
-    chip.addEventListener('click', () => {
-      if (selectedRightLungPEQual.has(f)) { selectedRightLungPEQual.delete(f); chip.classList.remove('selected'); }
-      else { selectedRightLungPEQual.add(f); chip.classList.add('selected'); }
+  const containerIds = ['rightLungPEQualChips', ...(WV_EXTRA_CHIP_CONTAINERS.rightLungPEQualChips || [])];
+  containerIds.forEach(cid => {
+    const c = document.getElementById(cid);
+    if (!c) return;
+    c.innerHTML = '';
+    LUNG_PE_QUALIFIERS.forEach(f => {
+      const chip = document.createElement('span');
+      chip.className = 'rhythm-chip';
+      chip.textContent = f;
+      if (selectedRightLungPEQual.has(f)) chip.classList.add('selected');
+      chip.addEventListener('click', () => {
+        if (selectedRightLungPEQual.has(f)) selectedRightLungPEQual.delete(f); else selectedRightLungPEQual.add(f);
+        buildRightLungPEQualChips();
+      });
+      c.appendChild(chip);
     });
-    c.appendChild(chip);
   });
 }
 
@@ -7144,13 +7708,20 @@ function buildRightLungPEQualChips() {
 function recalcDI() {
   const lvotVTI = parseFloat(document.getElementById('f-lvotVTI').value);
   const avVTI = parseFloat(document.getElementById('f-avVTI').value);
+  const showAvVMax = !!document.getElementById('toggle-show-av-vmax')?.checked && isMachineCWDEnabled();
+  const showLvotVMax = !!document.getElementById('toggle-show-lvot-vmax')?.checked && isMachinePWDEnabled();
+  const avVMax = showAvVMax ? parseFloat(document.getElementById('f-avVMax')?.value) : NaN;
+  const lvotVMax = showLvotVMax ? parseFloat(document.getElementById('f-lvotVMax')?.value) : NaN;
   const inp = document.getElementById('di-display-input');
   const src = document.getElementById('di-display-source');
   if (!inp) return;
   const manual = isAutoCalcManual(inp);
-  if (!isNaN(lvotVTI) && !isNaN(avVTI) && avVTI > 0 && lvotVTI > 0) {
-    const di = lvotVTI / avVTI;
-    if (!manual) inp.value = di.toFixed(2);
+  const vtiValid = !isNaN(lvotVTI) && !isNaN(avVTI) && avVTI > 0 && lvotVTI > 0;
+  const vmaxValid = !isNaN(lvotVMax) && !isNaN(avVMax) && avVMax > 0 && lvotVMax > 0;
+  if (vtiValid) {
+    if (!manual) inp.value = (lvotVTI / avVTI).toFixed(2);
+  } else if (vmaxValid) {
+    if (!manual) inp.value = (lvotVMax / avVMax).toFixed(2);
   } else if (!manual) {
     inp.value = '';
   }
@@ -7199,15 +7770,15 @@ function recalcAVAContinuity() {
 // ─── ONBOARDING TOUR ───────────────────────────────────
 const TOUR_STEPS = [
   {
-    sel: '#appHeader',
+    sel: '.header-actions',
     title: 'Welcome to FUSIC HD',
-    desc: 'This tool generates structured FUSIC HD echo reports. Use the icons in the top-right to switch theme, open settings, or restart this tour at any time.',
-    r: '0px'
+    desc: 'This tool generates structured FUSIC HD echo reports. Use the icons here to switch theme, review reference ranges, open settings, or relaunch this tour at any time.',
+    r: '24px'
   },
   {
     sel: '#scanInfoCard',
     title: 'Scan Information',
-    desc: 'Start here — enter patient demographics, operator details, machine information, and scan date/time before completing the rest of the form.',
+    desc: 'Start here - enter patient demographics, operator details, supervision status, scan quality, storage status scan date/time before completing the rest of the form.',
     r: '10px'
   },
   {
@@ -7235,7 +7806,7 @@ const TOUR_STEPS = [
   {
     sel: '#settingsPanel',
     title: 'Settings & Options',
-    desc: 'Customise your experience — toggle which sections appear, adjust export behaviour, enable guidance mode, and more.',
+    desc: 'The options menu gives granular control over your reporting experience. For example, if your machine does not allow you to perform Continous Wave Doppler (CWD) measurements, you can disable these from displaying on your reporting form. Additional features include a display mode optimised for desktop PCs and the ability to pseudo-anonymise your studies. If you log onto a different computer or device it is worth re-visiting these settings as they are not saved between sessions.',
     r: '0px',
     before() { openSettings(); },
     after() { closeSettings(); }
@@ -7310,8 +7881,8 @@ function _goToTourStep(idx) {
   const target = document.querySelector(step.sel);
   if (!target) return;
 
-  const noScroll = step.sel === '#appHeader' || step.sel === '#stickyFooter';
-  if (!noScroll) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const noScroll = step.sel === '#appHeader' || step.sel === '.header-actions' || step.sel === '#stickyFooter';
+  if (!noScroll) target.scrollIntoView({ behavior: 'instant', block: 'center' });
 
   const delay = step.sel === '#settingsPanel' ? 400 : 350;
   setTimeout(() => { if (_tourActive) _positionTour(target, step); }, delay);
@@ -7359,6 +7930,60 @@ function _positionTour(target, step) {
 // ─── SETTINGS ──────────────────────────────────────────
 function openSettings() { document.getElementById('settingsPanel').classList.add('open'); document.getElementById('overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
 function closeSettings() { document.getElementById('settingsPanel').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); document.body.style.overflow = ''; }
+
+// ─── SECTION NAVIGATOR ─────────────────────────────────
+function openSecNav() {
+  const list = document.getElementById('secNavList');
+  list.innerHTML = '';
+  const sheetTitle = document.querySelector('.sec-nav-title');
+
+  if (_wvActive) {
+    if (sheetTitle) sheetTitle.textContent = 'Go to view';
+    WV_WINDOWS.forEach((win, i) => {
+      const panel = document.getElementById(win.id);
+      if (!panel) return;
+      const btn = document.createElement('button');
+      btn.className = 'sec-nav-item';
+      btn.innerHTML = `<span class="sec-nav-item-num">${i + 1}</span><span>${win.title}</span>`;
+      btn.addEventListener('click', () => {
+        closeSecNav();
+        panel.classList.remove('wv-panel-collapsed');
+        panel.scrollIntoView({ behavior: 'instant', block: 'start', inline: 'start' });
+      });
+      list.appendChild(btn);
+    });
+  } else {
+    if (sheetTitle) sheetTitle.textContent = 'Go to section';
+    document.querySelectorAll('.form-section:not(.section-hidden)').forEach(sec => {
+      const numEl = sec.querySelector('.section-icon');
+      const titleEl = sec.querySelector('.section-title');
+      const num = numEl?.textContent?.trim() || '';
+      const label = (titleEl?.textContent || '').replace(/^\d+/, '').trim();
+      const btn = document.createElement('button');
+      btn.className = 'sec-nav-item';
+      btn.innerHTML = `<span class="sec-nav-item-num">${num}</span><span>${label}</span>`;
+      btn.addEventListener('click', () => {
+        closeSecNav();
+        if (sec.classList.contains('section-collapsed')) {
+          sec.classList.remove('section-collapsed');
+          updateScanInfoCollapseAllButton();
+        }
+        const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 56;
+        const top = sec.getBoundingClientRect().top + window.scrollY - headerH - 8;
+        window.scrollTo({ top, behavior: 'instant' });
+      });
+      list.appendChild(btn);
+    });
+  }
+
+  document.getElementById('secNavOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSecNav() {
+  document.getElementById('secNavOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function isGuidanceModeEnabled() { return !!document.getElementById('toggle-guidance-mode')?.checked; }
 function clearAbnormalFieldLabels() {
   document.querySelectorAll('.field-label.abnormal-label').forEach(el => el.classList.remove('abnormal-label'));
@@ -7826,7 +8451,7 @@ function populateDebugTestDataB() {
     'toggle-show-ea-field', 'toggle-show-pasp-field', 'toggle-show-rv-lv-basal-ratio',
     'toggle-show-tapse-pasp-ratio', 'toggle-show-rvot-vti', 'toggle-show-ava-continuity',
     'toggle-show-summary-section', 'toggle-machine-pwd', 'toggle-machine-cwd',
-    'toggle-machine-tdi', 'toggle-fusic-hd-questions'
+    'toggle-machine-tdi', 'toggle-fusic-hd-questions', 'toggle-show-aorta-detailed'
   ].forEach(id => setChk(id, true));
 
   // Chip selections
@@ -7836,22 +8461,29 @@ function populateDebugTestDataB() {
   buildRhythmChips();
 
   selectedCVSDrugs.clear();
-  selectedCVSDrugs.add('Adrenaline');
-  selectedCVSDrugs.add('Milrinone');
-  selectedCVSDrugs.add('Vasopressin');
+  CVS_DRUGS.forEach(d => selectedCVSDrugs.add(d));
   Object.keys(cvsDrugDetailValues).forEach(k => delete cvsDrugDetailValues[k]);
-  cvsDrugDetailValues.Adrenaline = '0.12 mcg/kg/min via right femoral CVC, titrating';
-  cvsDrugDetailValues.Milrinone = '0.375 mcg/kg/min, loaded 12h ago, stable';
-  cvsDrugDetailValues.Vasopressin = '2.4 units/hr, fixed dose';
+  cvsDrugDetailValues['Noradrenaline'] = '0.18 mcg/kg/min via right IJV CVC, titrating down slowly';
+  cvsDrugDetailValues['Vasopressin'] = '2.4 units/hr fixed dose, commenced 18h ago';
+  cvsDrugDetailValues['Adrenaline'] = '0.12 mcg/kg/min via left femoral CVC, titrating to MAP >65';
+  cvsDrugDetailValues['Milrinone'] = '0.375 mcg/kg/min, loaded 12h ago, stable haemodynamics';
+  cvsDrugDetailValues['Levosimendan'] = '0.1 mcg/kg/min, 24h infusion day 2, commenced for acute-on-chronic HF';
+  cvsDrugDetailValues['Metaraminol'] = '3 mg/hr peripheral infusion, temporary bridge awaiting CVC';
+  cvsDrugDetailValues['Phenylephrine'] = '1.5 mg/hr peripheral infusion, weaning — MAP 68 mmHg';
+  cvsDrugDetailValues['Nitric oxide'] = '20 ppm inhaled, commenced 6h ago for acute RV failure and pulmonary hypertension';
+  cvsDrugDetailValues['Epoprostenol'] = '2 ng/kg/min inhaled via nebuliser, adjunct to iNO for severe PHT';
   buildCVSDrugChips();
   updateCVSDrugDetailsUI();
 
   selectedTamponade.clear();
   selectedTamponade.add('RA collapse');
   selectedTamponade.add('RV collapse');
+  selectedTamponade.add('Abnormal MV/TV inflow variation');
+  selectedTamponade.add('Fixed, dilated IVC >2cm');
   buildTamponadeChips();
 
   selectedLVOTO.clear();
+  LVOTO_FEATURES.forEach(f => selectedLVOTO.add(f));
   buildLVOTOChips();
 
   selectedPHTBasic.clear();
@@ -7884,7 +8516,7 @@ function populateDebugTestDataB() {
   setV('f-operatorName', 'Dr. Priya Mehta');
   setV('f-supervision', 'direct');
   setV('f-supervisorName', 'Prof. Andrew Clarke');
-  setV('f-imageQuality', 'Challenging');
+  setV('f-imageQuality', 'Poor');
   setV('f-imagesStored', 'Uploaded to PACS');
 
   // ── Demographics ──
@@ -7897,10 +8529,12 @@ function populateDebugTestDataB() {
   setV('f-hr', '92');
   setV('f-sbp', '98');
   setV('f-dbp', '62');
-  setV('f-ventilation', 'Self-Vent: BiPAP');
-  setV('f-fio2', '60');
+  setV('f-ventilation', 'Ventilated');
+  setV('f-fio2', '65');
   setV('f-peep', '10');
-  setV('f-ipap', '16');
+  setV('f-ventilatory-mode', 'Mandatory/IPPV');
+  setV('f-pplat', '26');
+  setV('f-tidal-volume', '380');
   setV('f-cvp', '18');
   setV('f-indication', '54F with decompensated heart failure, worsening dyspnoea and peripheral oedema. BiPAP commenced for type 2 respiratory failure. Assessing biventricular function, valvular pathology, filling pressures and venous congestion to guide diuretic and inotrope therapy.');
 
@@ -7910,12 +8544,13 @@ function populateDebugTestDataB() {
   setV('f-visualLvSize', 'Dilated');
   setV('f-ivsd', '9');
   setV('f-lvpwd', '9');
-  setV('f-ef', 'Severely Impaired (< 30%)');
+  setV('f-ef', 'Severely impaired (≤ 35%)');
   setV('f-efSimpsonBiplane', '22');
   setV('f-mapse', '6');
   setV('f-lvSPrime', '4');
   setV('f-rwma', 'Present');
   setV('f-rwmaDesc', 'Akinesia of the anterior wall and septum from base to apex. Hypokinesia of the anterolateral wall. Basal inferior and inferolateral walls appear to contract normally.');
+  RWMA.setStates({ 1:0, 2:2, 3:0, 4:0, 5:0, 6:1, 7:2, 8:2, 9:0, 10:0, 11:0, 12:1, 13:2, 14:2, 15:0, 16:1, 17:2 });
   setV('f-lvotDiam', '1.9');
   setV('f-lvotVTI', '10');
   setV('f-vtiDeltaResp', '6');
@@ -7927,9 +8562,9 @@ function populateDebugTestDataB() {
   setV('f-vtiInterventionDetails', 'PLR showed 8% increase. 250ml Hartmann\'s bolus given over 15 min — no further augmentation of VTI.');
 
   // ── LA / Diastolic ──
-  setV('f-bLinesLung', 'Yes');
+  setV('f-bLinesLung', 'Yes - Bilateral');
   setV('f-atrialSeptalDev', 'None');
-  setV('f-laVisual', 'Dilated');
+  setV('f-laVisual', 'Visually dilated');
   setV('f-laDiamSys', '48');
   setV('f-laArea', '26');
   setV('f-eWave', '95');
@@ -7961,20 +8596,20 @@ function populateDebugTestDataB() {
 
   // ── Valves ──
   setV('f-mvSten', 'Normal');
-  setV('f-mvApp', 'Thickened / Abnormal');
-  setV('f-mvReg', 'Moderate-Severe');
-  setV('f-avSten', 'Sclerotic (No stenosis)');
+  setV('f-mvApp', 'Thick');
+  setV('f-mvReg', 'Significant');
+  setV('f-avSten', 'Normal');
   setV('f-avApp', 'Calcified');
-  setV('f-avReg', 'Mild');
+  setV('f-avReg', 'Present but unlikely to be HD compromising');
   setV('f-avVTI', '20');
   setV('f-lvotVTI-valve', '10');
   setV('f-tvSten', 'Normal');
   setV('f-tvApp', 'Thin');
-  setV('f-tvReg', 'Moderate');
+  setV('f-tvReg', 'Significant');
   setV('f-trVmax', '3.6');
   setV('f-pvSten', 'Normal');
   setV('f-pvApp', 'Thin');
-  setV('f-pvReg', 'Mild');
+  setV('f-pvReg', 'Trivial/Trace');
 
   // ── Pericardium ──
   setV('f-periEffusion', 'Moderate');
@@ -8000,13 +8635,29 @@ function populateDebugTestDataB() {
   setV('f-aortaAbdDiam', '20');
   setV('f-aortaAbdFlap', 'Absent');
   setV('f-aortaAbdFlow', 'Normal');
+  // Detailed abdominal sub-sections (visible when toggle-show-aorta-detailed is on)
+  setV('f-aortaAbdProxDiam', '23');
+  setV('f-aortaAbdProxFlap', 'Absent');
+  setV('f-aortaAbdProxFlow', 'Normal');
+  setV('f-aortaAbdMidDiam', '21');
+  setV('f-aortaAbdMidFlap', 'Absent');
+  setV('f-aortaAbdMidFlow', 'Normal');
+  setV('f-aortaAbdDistDiam', '19');
+  setV('f-aortaAbdDistFlap', 'Absent');
+  setV('f-aortaAbdDistFlow', 'Normal');
+  setV('f-aortaRIliacDiam', '11');
+  setV('f-aortaRIliacFlap', 'Absent');
+  setV('f-aortaRIliacFlow', 'Normal');
+  setV('f-aortaLIliacDiam', '12');
+  setV('f-aortaLIliacFlap', 'Absent');
+  setV('f-aortaLIliacFlow', 'Normal');
 
   // ── Veins / IVC ──
   setV('f-ivcDiam', '2.6');
   setV('f-ivcCollapse', '<50% collapse');
-  setV('f-hepaticVein', 'S reversal');
-  setV('f-portalVein', '>50%');
-  setV('f-renalVein', 'Biphasic (S&D)');
+  setV('f-hepaticVein', 'S reversal / D only');
+  setV('f-portalVein', '>0.5');
+  setV('f-renalVein', 'Biphasic');
   setV('f-rriPSV', '55');
   setV('f-rriEDV', '18');
 
@@ -8017,9 +8668,9 @@ function populateDebugTestDataB() {
   // ── Summary / FUSIC HD Questions ──
   setV('f-sumCond-strokeVol', 'Yes');
   setV('f-sumCond-strokeVolResponsive', 'No');
-  setV('f-sumCond-aortaAbn', 'No');
+  setV('f-sumCond-aortaAbn', 'Yes');
   setV('f-sumCond-valvesSevere', 'Yes');
-  setV('f-sumCond-sam', 'No');
+  setV('f-sumCond-sam', 'Yes');
   setV('f-sumCond-rwma', 'Yes');
   setV('f-sumCond-lapRaised', 'Yes');
   setV('f-sumCond-rvImpair', 'Yes');
@@ -8028,7 +8679,7 @@ function populateDebugTestDataB() {
   setV('f-sumCond-venousCong', 'Yes');
 
   setV('f-impression', 'Severely dilated left ventricle with severely impaired systolic function (EF ~22%). Regional wall motion abnormality with anterior and septal akinesia suggestive of prior LAD territory infarction. Moderate-severe functional mitral regurgitation. Dilated LA with raised left atrial pressure pattern (E/A >2, raised E/e\', elevated TR Vmax). Dilated RV with impaired biventricular function. Significant tricuspid regurgitation with estimated PASP suggesting severe pulmonary hypertension. Moderate pericardial effusion with features suggesting early tamponade physiology (RA and RV diastolic collapse). Dilated IVC with minimal collapse and severe venous congestion pattern (hepatic vein S reversal, portal pulsatility >50%, biphasic renal vein flow). Bilateral pleural effusions, right larger than left, with widespread B-lines bilaterally. Right basal consolidation.');
-  setV('f-significance', 'Abnormal (unexpected)');
+  setV('f-significance', 'Abnormal (new finding)');
   setV('f-actions', '1. Urgent cardiology review for severe biventricular failure with tamponade features — consider pericardiocentesis.\n2. Commence milrinone infusion as per cardiologist recommendation.\n3. IV furosemide 80mg bolus then infusion 10mg/hr for volume overload.\n4. Repeat echo in 4–6 hours post-intervention to reassess pericardial effusion and biventricular function.\n5. Restrict IV fluids to essential medications only.');
 
   // ── EDEC interpretations ──
@@ -8037,10 +8688,10 @@ function populateDebugTestDataB() {
   setV('edec-interp-rh', 'RV visually dilated with basal diameter 48mm (severely above normal female range). RV:LV basal ratio significantly >1. Both longitudinal and radial function visually impaired. TAPSE markedly reduced at 12mm and RV S\' reduced at 7cm/s. FAC approximately 28% — borderline impaired. D-shaped septum noted, consistent with RV pressure overload. RA visually dilated with area 22cm². TR jet velocity 3.6 m/s — with CVP estimated at 18mmHg, PASP approximately 70mmHg suggesting severe pulmonary hypertension. TAPSE/PASP ratio markedly reduced indicating poor RV–PA coupling. RVOT acceleration time 72ms, early diastolic PR velocity 2.5 m/s, PA diameter 30mm — all supporting severe pulmonary hypertension. Systolic notching of RVOT Doppler observed.');
   setV('edec-interp-valves', 'Mitral valve: leaflets thickened and abnormal; no significant stenosis on this study; moderate-severe regurgitation with a posteriorly directed jet, likely functional secondary to annular dilatation and LV remodelling. Aortic valve: calcified, sclerotic without significant stenosis; mild aortic regurgitation. Dimensionless index 0.5 — consistent with no critical AS on this sweep. Tricuspid valve: thin leaflets; moderate tricuspid regurgitation. TR Vmax 3.6 m/s. Pulmonary valve: thin; mild pulmonary regurgitation.');
   setV('edec-interp-pericardium', 'Moderate pericardial effusion, circumferential, echogenic fluid suggesting possible exudative or haemorrhagic component. RA diastolic collapse and RV diastolic collapse identified — features consistent with early tamponade physiology. Clinical correlation recommended urgently.');
-  setV('edec-interp-aorta', 'Aortic root 38mm, ascending aorta 36mm — at upper limit for female patient. No dissection flap at any level assessed. Arch flow noted as abnormal — potential holodiastolic flow reversal suggesting significant AR, though quantification limited on this bedside study. Descending and abdominal aorta diameters within normal limits with normal flow.');
-  setV('edec-interp-veins', 'IVC significantly dilated at 2.6cm with <50% collapse, indicating elevated right atrial pressure (estimated CVP ≥15mmHg). Hepatic vein Doppler shows systolic flow reversal — severe congestion. Portal vein pulsatility fraction >50% — severe congestion. Renal intrarenal venous Doppler biphasic (S and D pattern only) — moderate-severe congestion. Overall VeXUS pattern consistent with severe systemic venous congestion. Renal resistive index elevated at 0.67, suggesting renal hypoperfusion in the setting of cardiorenal compromise.');
+  setV('edec-interp-aorta', 'Aortic root 38mm, ascending aorta 36mm — at upper limit for female patient. No dissection flap at any level assessed. Arch flow noted as abnormal — potential holodiastolic flow reversal suggesting significant AR, though quantification limited on this bedside study. Descending aorta within normal limits. Detailed abdominal aortic assessment: proximal 23mm, mid 21mm, distal 19mm — mildly ectatic, no aneurysmal dilation. Right common iliac 11mm, left common iliac 12mm — both within normal limits. No dissection flap or abnormal colour flow pattern at any abdominal level assessed.');
+  setV('edec-interp-veins', 'IVC significantly dilated at 2.6cm with <50% collapse, indicating elevated right atrial pressure (estimated CVP ≥15mmHg). Hepatic vein Doppler shows systolic flow reversal / D only — severe congestion (VeXUS grade 3). Portal vein pulsatility fraction >0.5 — severe congestion (VeXUS grade 3). Renal interlobar venous Doppler biphasic pattern — moderate congestion (VeXUS grade 2). Overall VeXUS pattern consistent with severe systemic venous congestion. Renal resistive index elevated at 0.67, suggesting renal hypoperfusion in the setting of cardiorenal compromise.');
   setV('edec-interp-lungs', 'Left lung: widespread B-lines consistent with pulmonary oedema; small pleural effusion, simple. Right lung: widespread B-lines, consolidation at the base (possibly atelectatic vs infective), and moderate pleural effusion — loculated appearance raises concern for empyema or complex effusion; clinical and radiological correlation advised.');
-  setV('edec-significance', 'Abnormal (unexpected)');
+  setV('edec-significance', 'Abnormal (new finding)');
   setV('edec-impression', document.getElementById('f-impression')?.value || '');
   setV('edec-actions', document.getElementById('f-actions')?.value || '');
 
@@ -8050,6 +8701,7 @@ function populateDebugTestDataB() {
   refreshEAFieldVisibility();
   refreshRightHeartOptionalVisibility();
   refreshValveOptionalVisibility();
+  refreshAortaDetailedVisibility();
   toggleSummarySectionVisibility(true);
   checkSupervisionField();
   checkRWMA();
@@ -8083,7 +8735,7 @@ function populateDebugTestDataB() {
   syncPHTBasicAutoSelections();
   runMainContentSoftValidation();
   refreshFusicHdQuestionHighlights();
-  showToast('Debug test data B loaded (decompensated HF — all fields)', 'success');
+  showToast('Test data B loaded — all fields populated (decompensated HF scenario)', 'success');
 }
 
 // ─── SECTION VISIBILITY ────────────────────────────────
@@ -8242,12 +8894,14 @@ function onNonfusicMeasuresGlobalMasterChange(ev) {
   syncLAPMasterToggle();
   syncRHMasterToggle();
   syncValveMasterToggle();
+  syncAortaMasterToggle();
   syncNonfusicIndexedMasterToggle();
   refreshLVMeasuresOptionalVisibility();
   refreshHaemodynamicsOptionalVisibility();
   refreshEAFieldVisibility();
   refreshRightHeartOptionalVisibility();
   refreshValveOptionalVisibility();
+  refreshAortaDetailedVisibility();
 }
 
 /** An indexed measure is "eligible" when (a) its required machine capability
@@ -8464,8 +9118,50 @@ function refreshValveOptionalVisibility() {
     isMachinePWDEnabled() &&
     isMachineCWDEnabled();
   document.getElementById('ava-continuity-field-wrap')?.classList.toggle('section-hidden', !on);
+  const avVMaxOn = !!document.getElementById('toggle-show-av-vmax')?.checked && isMachineCWDEnabled();
+  document.getElementById('av-vmax-field-wrap')?.classList.toggle('section-hidden', !avVMaxOn);
+  const lvotVMaxOn = !!document.getElementById('toggle-show-lvot-vmax')?.checked && isMachinePWDEnabled();
+  document.getElementById('lvot-vmax-field-wrap')?.classList.toggle('section-hidden', !lvotVMaxOn);
   recalcAVAContinuity();
+  recalcDI();
   syncValveMasterToggle();
+}
+
+function refreshAortaDetailedVisibility() {
+  const on = !!document.getElementById('toggle-show-aorta-detailed')?.checked;
+  document.getElementById('aorta-detailed-fields-wrap')?.classList.toggle('section-hidden', !on);
+  document.getElementById('aorta-abd-summary-fields')?.classList.toggle('section-hidden', on);
+  syncAortaMasterToggle();
+}
+
+function syncAortaMasterToggle() {
+  const master = document.getElementById('toggle-aorta-measures-all');
+  if (!master) return;
+  const available = availableNonfusicIds(AORTA_MEASURES_CHILD_TOGGLE_IDS);
+  master.checked = available.length > 0 && available.every(id => !!document.getElementById(id)?.checked);
+}
+
+function onAortaMasterChange(ev) {
+  if (_syncingAortaMaster) return;
+  _syncingAortaMaster = true;
+  const on = ev.target.checked;
+  const targets = on ? availableNonfusicIds(AORTA_MEASURES_CHILD_TOGGLE_IDS) : AORTA_MEASURES_CHILD_TOGGLE_IDS;
+  targets.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.disabled) el.checked = on;
+  });
+  _syncingAortaMaster = false;
+  refreshAortaDetailedVisibility();
+  syncNonfusicMeasuresGlobalMasterToggle();
+  syncNonfusicIndexedMasterToggle();
+}
+
+function onAortaChildToggleChange() {
+  if (_syncingAortaMaster) return;
+  syncAortaMasterToggle();
+  refreshAortaDetailedVisibility();
+  syncNonfusicMeasuresGlobalMasterToggle();
+  syncNonfusicIndexedMasterToggle();
 }
 
 function clearCardiacIndexValidationUI() {
@@ -8643,6 +9339,7 @@ function checkRWMA() {
   document.getElementById('f-rwmaDesc-wrap').classList.toggle('visible', show);
   if (show && typeof RWMA !== 'undefined') RWMA.refreshInlinePreview();
   if (!show) { const p = document.getElementById('rwma-inline-preview'); if (p) p.style.display = 'none'; }
+  if (_wvActive) wvRefreshFieldVisibility();
 }
 function checkPericardialEffusion() {
   const v = document.getElementById('f-periEffusion').value;
@@ -10567,20 +11264,24 @@ function collectSessionDraftPayload() {
   const fields = Object.create(null);
   const checkboxes = Object.create(null);
   const manuals = Object.create(null);
-  if (main) {
-    main.querySelectorAll('input, select, textarea').forEach(el => {
+  const collectFromContainer = (container) => {
+    if (!container) return;
+    container.querySelectorAll('input, select, textarea').forEach(el => {
       const id = el.id;
       if (!id) return;
       if (el.type === 'checkbox') checkboxes[id] = !!el.checked;
       else if (el.type !== 'file' && el.type !== 'button' && el.type !== 'submit') fields[id] = el.value;
     });
-  }
+  };
+  collectFromContainer(main);
+  collectFromContainer(document.getElementById('windowView'));
   document.querySelectorAll('.auto-calc-input').forEach(el => {
     if (el.id && el.dataset.manual === '1') manuals[el.id] = '1';
   });
-  const conditionals = [...document.querySelectorAll('#mainContent .conditional-field')]
-    .filter(el => el.classList.contains('visible') && el.id)
-    .map(el => el.id);
+  const conditionals = [
+    ...document.querySelectorAll('#mainContent .conditional-field'),
+    ...document.querySelectorAll('#windowView .conditional-field')
+  ].filter(el => el.classList.contains('visible') && el.id).map(el => el.id);
   const settingsToggles = Object.create(null);
   SESSION_DRAFT_TOGGLE_IDS.forEach(tid => {
     const el = document.getElementById(tid);
@@ -11293,6 +11994,7 @@ function runQuickExportFormat(format) {
   else if (format === 'plain-text-page') openPlainTextReportView();
   else if (format === 'quick-data-page') openQuickDataInputTextView();
   else if (format === 'print-pdf') doExportPrintPdf();
+  else if (format === 'rf-form') doExportRfFormPdf();
   else if (format === 'edec') openEdecEditor();
 }
 
@@ -11304,6 +12006,7 @@ function triggerExportFromModal(format) {
   else if (format === 'plain-text-page') openPlainTextReportView();
   else if (format === 'quick-data-page') openQuickDataInputTextView();
   else if (format === 'print-pdf') doExportPrintPdf();
+  else if (format === 'rf-form') doExportRfFormPdf();
   else if (format === 'edec') openEdecEditor();
 }
 
@@ -11535,7 +12238,8 @@ function updateExportImagesUIVisibility() {
 }
 
 function refreshExportImagesAttachedBadges() {
-  const on = isExportImagesEnabled() && attachedExportImages.length > 0;
+  const imgCount = attachedExportImages.filter(it => it.type !== 'header').length;
+  const on = isExportImagesEnabled() && imgCount > 0;
   document.querySelectorAll('.export-attached-img-badge').forEach(el => {
     el.classList.toggle('is-on', on);
   });
@@ -11544,7 +12248,7 @@ function refreshExportImagesAttachedBadges() {
 function updateExportImagesStatusLine() {
   const status = document.getElementById('exportImagesStatus');
   const enabled = isExportImagesEnabled();
-  const n = attachedExportImages.length;
+  const n = attachedExportImages.filter(it => it.type !== 'header').length;
   if (status) {
     if (!enabled) {
       status.hidden = true;
@@ -11653,6 +12357,7 @@ async function addExportImageFiles(fileList) {
       const dataUrl = await readFileAsDataURL(f);
       const dims = await probeImageDimensions(dataUrl);
       attachedExportImages.push({
+        type: 'image',
         id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         name: f.name || 'image',
         size: f.size,
@@ -11680,6 +12385,18 @@ async function addExportImageFiles(fileList) {
   }
 }
 
+function addSectionHeader() {
+  attachedExportImages.push({
+    type: 'header',
+    id: `hdr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    text: ''
+  });
+  renderExportImagesList();
+  const list = document.getElementById('exportImagesList');
+  const last = list?.lastElementChild?.querySelector('.export-images-header-input');
+  if (last) last.focus();
+}
+
 function removeExportImage(id) {
   attachedExportImages = attachedExportImages.filter(it => it.id !== id);
   renderExportImagesList();
@@ -11699,31 +12416,50 @@ function moveExportImage(id, delta) {
 function renderExportImagesList() {
   const list = document.getElementById('exportImagesList');
   const empty = document.getElementById('exportImagesEmpty');
+  const addHdrWrap = document.getElementById('exportImagesAddHeaderWrap');
   if (!list) return;
   list.innerHTML = '';
+  const hasImages = attachedExportImages.some(it => it.type !== 'header');
   if (empty) empty.hidden = attachedExportImages.length > 0;
+  if (addHdrWrap) addHdrWrap.hidden = !hasImages;
   const esc = (typeof escapeHtml === 'function') ? escapeHtml : s => String(s);
   attachedExportImages.forEach((it, i) => {
     const li = document.createElement('li');
-    li.className = 'export-images-row';
     li.dataset.id = it.id;
     li.draggable = true;
-    li.innerHTML = `
-      <div class="export-images-row-handle" aria-label="Reorder">
-        <button type="button" class="export-images-row-handle-btn" data-act="up" aria-label="Move up"${i === 0 ? ' disabled' : ''}>▲</button>
-        <span class="export-images-row-handle-dots" aria-hidden="true">⋮⋮</span>
-        <button type="button" class="export-images-row-handle-btn" data-act="down" aria-label="Move down"${i === attachedExportImages.length - 1 ? ' disabled' : ''}>▼</button>
-      </div>
-      <img class="export-images-row-thumb" src="${esc(it.dataUrl)}" alt="">
-      <div class="export-images-row-name">
-        ${esc(it.name)}
-        <span class="export-images-row-name-meta">${esc(formatFileSize(it.size) || '')}${it.size ? ' · ' : ''}Position ${i + 1} of ${attachedExportImages.length}</span>
-      </div>
-      <div class="export-images-row-actions">
-        <button type="button" class="export-images-row-del" data-act="del" aria-label="Remove image">Remove</button>
-      </div>
-      <textarea class="export-images-row-anno" data-act="anno" placeholder="Annotation (optional)" rows="1" aria-label="Annotation for ${esc(it.name)}">${esc(it.annotation || '')}</textarea>
-    `;
+    if (it.type === 'header') {
+      li.className = 'export-images-row export-images-row--header';
+      li.innerHTML = `
+        <div class="export-images-row-handle" aria-label="Reorder">
+          <button type="button" class="export-images-row-handle-btn" data-act="up" aria-label="Move up"${i === 0 ? ' disabled' : ''}>▲</button>
+          <span class="export-images-row-handle-dots" aria-hidden="true">⋮⋮</span>
+          <button type="button" class="export-images-row-handle-btn" data-act="down" aria-label="Move down"${i === attachedExportImages.length - 1 ? ' disabled' : ''}>▼</button>
+        </div>
+        <span class="export-images-header-label">Section header</span>
+        <input type="text" class="export-images-header-input" data-act="header-text" placeholder="Section title…" value="${esc(it.text || '')}" aria-label="Section header title">
+        <div class="export-images-row-actions">
+          <button type="button" class="export-images-row-del" data-act="del" aria-label="Remove section header">Remove</button>
+        </div>
+      `;
+    } else {
+      li.className = 'export-images-row';
+      li.innerHTML = `
+        <div class="export-images-row-handle" aria-label="Reorder">
+          <button type="button" class="export-images-row-handle-btn" data-act="up" aria-label="Move up"${i === 0 ? ' disabled' : ''}>▲</button>
+          <span class="export-images-row-handle-dots" aria-hidden="true">⋮⋮</span>
+          <button type="button" class="export-images-row-handle-btn" data-act="down" aria-label="Move down"${i === attachedExportImages.length - 1 ? ' disabled' : ''}>▼</button>
+        </div>
+        <img class="export-images-row-thumb" src="${esc(it.dataUrl)}" alt="">
+        <div class="export-images-row-name">
+          ${esc(it.name)}
+          <span class="export-images-row-name-meta">${esc(formatFileSize(it.size) || '')}${it.size ? ' · ' : ''}Position ${i + 1} of ${attachedExportImages.length}</span>
+        </div>
+        <div class="export-images-row-actions">
+          <button type="button" class="export-images-row-del" data-act="del" aria-label="Remove image">Remove</button>
+        </div>
+        <textarea class="export-images-row-anno" data-act="anno" placeholder="Annotation (optional)" rows="1" aria-label="Annotation for ${esc(it.name)}">${esc(it.annotation || '')}</textarea>
+      `;
+    }
     list.appendChild(li);
   });
 }
@@ -11741,18 +12477,20 @@ function onExportImagesListClick(e) {
 }
 
 function onExportImagesListInput(e) {
-  const ta = e.target.closest('textarea[data-act="anno"]');
-  if (!ta) return;
-  const row = ta.closest('.export-images-row');
+  const row = e.target.closest('.export-images-row');
   if (!row) return;
   const it = attachedExportImages.find(x => x.id === row.dataset.id);
-  if (it) it.annotation = ta.value;
+  if (!it) return;
+  const ta = e.target.closest('textarea[data-act="anno"]');
+  if (ta) { it.annotation = ta.value; return; }
+  const inp = e.target.closest('input[data-act="header-text"]');
+  if (inp) { it.text = inp.value; }
 }
 
 function onExportImagesRowDragStart(e) {
   const row = e.target.closest('.export-images-row');
   if (!row) return;
-  if (e.target.closest('textarea, button')) { e.preventDefault(); return; }
+  if (e.target.closest('textarea, input, button')) { e.preventDefault(); return; }
   _exportImagesDragId = row.dataset.id;
   row.classList.add('dragging');
   if (e.dataTransfer) {
@@ -11803,6 +12541,7 @@ function initExportImagesAttachments() {
   });
   document.getElementById('exportSelectImagesBtn')?.addEventListener('click', openExportImagesFlow);
   document.getElementById('exportImagesPiiContinueBtn')?.addEventListener('click', acknowledgeExportImagesPii);
+  document.getElementById('exportImagesAddHeaderBtn')?.addEventListener('click', addSectionHeader);
 
   const perPageSel = document.getElementById('exportImagesPerPage');
   if (perPageSel) {
@@ -11860,24 +12599,30 @@ function clearAttachedExportImages() {
 }
 
 function buildAttachedImagesHTML() {
-  if (!isExportImagesEnabled() || !attachedExportImages.length) return '';
+  const images = attachedExportImages.filter(it => it.type !== 'header');
+  if (!isExportImagesEnabled() || !images.length) return '';
   const esc = escapeHtml;
   const n = Number(exportImagesPerPage);
   const perPageClass = (n >= 1 && n <= 4) ? ` print-image-grid--per-page-${n}` : '';
   const parts = ['<section class="print-image-attachments" aria-label="Attached images">'];
   parts.push('<h2 class="print-image-attachments-title">Attached images</h2>');
-  parts.push(`<div class="print-image-grid${perPageClass}">`);
+  let gridOpen = false;
   for (const it of attachedExportImages) {
-    const orient = it.orientation || classifyImageOrientation(it.width, it.height);
-    parts.push(`<figure class="print-image-figure print-image-figure--${esc(orient)}">`);
-    parts.push(`<img src="${esc(it.dataUrl)}" alt="${esc(it.annotation || '')}">`);
-    const cap = (it.annotation || '').trim();
-    if (cap) {
-      parts.push(`<figcaption>${esc(cap)}</figcaption>`);
+    if (it.type === 'header') {
+      if (gridOpen) { parts.push('</div>'); gridOpen = false; }
+      const title = (it.text || '').trim();
+      if (title) parts.push(`<h3 class="print-image-section-header">${esc(title)}</h3>`);
+    } else {
+      if (!gridOpen) { parts.push(`<div class="print-image-grid${perPageClass}">`); gridOpen = true; }
+      const orient = it.orientation || classifyImageOrientation(it.width, it.height);
+      parts.push(`<figure class="print-image-figure print-image-figure--${esc(orient)}">`);
+      parts.push(`<img src="${esc(it.dataUrl)}" alt="${esc(it.annotation || '')}">`);
+      const cap = (it.annotation || '').trim();
+      if (cap) parts.push(`<figcaption>${esc(cap)}</figcaption>`);
+      parts.push('</figure>');
     }
-    parts.push('</figure>');
   }
-  parts.push('</div>');
+  if (gridOpen) parts.push('</div>');
   parts.push('</section>');
   return parts.join('');
 }
@@ -11965,7 +12710,10 @@ const NONFUSIC_HD_EXPORT_MEASURE_OPTIONS = [
   { id: 'toggle-show-svi', label: 'Stroke volume index' },
   { id: 'toggle-show-svr', label: 'Systemic vascular resistance (SVR)' },
   { id: 'toggle-show-svri', label: 'SVR index' },
-  { id: 'toggle-show-ava-continuity', label: 'Aortic valve area (continuity equation)' }
+  { id: 'toggle-show-ava-continuity', label: 'Aortic valve area (continuity equation)' },
+  { id: 'toggle-show-av-vmax', label: 'AV VMax' },
+  { id: 'toggle-show-lvot-vmax', label: 'LVOT VMax' },
+  { id: 'toggle-show-aorta-detailed', label: 'Detailed Aortic Assessment' }
 ];
 
 function getNonFusicHdEnabledMeasureLabelsForExport() {
@@ -12068,6 +12816,7 @@ function buildExportRows() {
   const blank  = () => rows.push({ t:'blank' });
   const sec    = title => rows.push({ t:'section', title });
   const row    = (label, value) => { if (value !== '' && value != null && String(value).trim() !== '') rows.push({ t:'row', label, value: String(value) }); };
+  const wideRow = (label, value) => { if (value !== '' && value != null && String(value).trim() !== '') rows.push({ t:'wideRow', label, value: String(value) }); };
   const rowU   = (label, value, unit) => {
     if (value === '' || value == null) return;
     const s = String(value).trim();
@@ -12090,7 +12839,7 @@ function buildExportRows() {
     const afterHdr = rows.length;
     bodyFn();
     const hasContent = rows.slice(afterHdr).some(r => {
-      if (r.t === 'row' || r.t === 'subhdr' || r.t === 'rwmaDiagram') return true;
+      if (r.t === 'row' || r.t === 'subhdr' || r.t === 'rwmaDiagram' || r.t === 'aortaTable') return true;
       if (r.t === 'summaryConclusionsBlock') {
         const sig = (r.significance || '').trim();
         const imp = (r.impression || '').trim();
@@ -12184,7 +12933,7 @@ function buildExportRows() {
   });
 
   // 2. LV
-  section('Left Ventricle', () => {
+  section('LEFT VENTRICLE', () => {
     rowU('LVIDd', getVal('f-lvidd'), 'mm');
     rowU('LVIDs', getVal('f-lvids'), 'mm');
     rowU('IVSd', getVal('f-ivsd'), 'mm');
@@ -12221,7 +12970,7 @@ function buildExportRows() {
       }
     }
     row('Regional Wall Motion Abnormality', getVal('f-rwma'));
-    if (getVal('f-rwma') === 'Present') row('RWMA Description', getVal('f-rwmaDesc'));
+    if (getVal('f-rwma') === 'Present') wideRow('RWMA Description', getVal('f-rwmaDesc'));
     if (getVal('f-rwma') === 'Present' && RWMA.hasAbnormal()) {
       rows.push({ t: 'rwmaDiagram', states: RWMA.getStates() });
     }
@@ -12376,7 +13125,9 @@ function buildExportRows() {
           (isMachineCWDEnabled() && isMachinePWDEnabled() && getDICalc()) ||
           selectedLVOTO.size ||
           (document.getElementById('toggle-show-ava-continuity')?.checked &&
-            (getVal('f-lvotDiam') || getVal('f-avVTI') || getVal('f-lvotVTI') || getAVAContinuityCalc()))
+            (getVal('f-lvotDiam') || getVal('f-avVTI') || getVal('f-lvotVTI') || getAVAContinuityCalc())) ||
+          (document.getElementById('toggle-show-av-vmax')?.checked && getVal('f-avVMax')) ||
+          (document.getElementById('toggle-show-lvot-vmax')?.checked && getVal('f-lvotVMax'))
         );
         if (sten || app || reg || hasTric || hasAort) {
           subhdr(`${v.name} Valve`);
@@ -12385,7 +13136,9 @@ function buildExportRows() {
           row('  Regurgitation', reg);
           if (v.aorticExtra) {
             if (isMachineCWDEnabled()) rowU('  AV VTI', getVal('f-avVTI'), 'cm');
+            if (document.getElementById('toggle-show-av-vmax')?.checked) rowU('  AV VMax', getVal('f-avVMax'), 'm/s');
             if (isMachinePWDEnabled() && getVal('f-lvotVTI')) rowU('  LVOT VTI', getVal('f-lvotVTI'), 'cm');
+            if (document.getElementById('toggle-show-lvot-vmax')?.checked) rowU('  LVOT VMax', getVal('f-lvotVMax'), 'm/s');
             if (isMachineCWDEnabled() && isMachinePWDEnabled()) {
               const di = getDICalc();
               if (di) row(isAutoCalcManual(document.getElementById('di-display-input')) ? '  Dimensionless Index — manually entered' : '  Dimensionless Index', di);
@@ -12428,24 +13181,36 @@ function buildExportRows() {
   // 7. Aorta
   if (isSectionOn('aorta')) {
     section('AORTA', () => {
-      const aortaSegs = [
-        { label:'Root (PSLAX)',          diam:'f-aortaRootDiam', flap:'f-aortaRootFlap', flow:'f-aortaRootFlow' },
-        { label:'Ascending (Mod PSLAX)', diam:'f-aortaAscDiam',  flap:'f-aortaAscFlap',  flow:'f-aortaAscFlow' },
-        { label:'Arch (Supra-sternal)',  diam:'f-aortaArchDiam', flap:'f-aortaArchFlap', flow:'f-aortaArchFlow' },
-        { label:'Descending (A2C)',      diam:'f-aortaDescDiam', flap:'f-aortaDescFlap', flow:'f-aortaDescFlow' },
-        { label:'Abdominal',            diam:'f-aortaAbdDiam',  flap:'f-aortaAbdFlap',  flow:'f-aortaAbdFlow' }
+      const detailedOn = !!document.getElementById('toggle-show-aorta-detailed')?.checked;
+      const mainAortaSegs = [
+        { label:'Root',       diam:'f-aortaRootDiam', flap:'f-aortaRootFlap', flow:'f-aortaRootFlow' },
+        { label:'Ascending',  diam:'f-aortaAscDiam',  flap:'f-aortaAscFlap',  flow:'f-aortaAscFlow' },
+        { label:'Arch',       diam:'f-aortaArchDiam', flap:'f-aortaArchFlap', flow:'f-aortaArchFlow' },
+        { label:'Descending', diam:'f-aortaDescDiam', flap:'f-aortaDescFlap', flow:'f-aortaDescFlow' }
       ];
-      aortaSegs.forEach(seg => {
-        const d = getVal(seg.diam);
-        const f = seg.flap ? getVal(seg.flap) : '';
-        const c = seg.flow ? getVal(seg.flow) : '';
-        if (d || f || c) {
-          subhdr(seg.label);
-          rowU('  Diameter', d, 'mm');
-          if (f) row('  Dissection Flap', f);
-          if (c) row('  Colour Flow Pattern', c);
+      if (!detailedOn) {
+        mainAortaSegs.push({ label:'Abdominal', diam:'f-aortaAbdDiam', flap:'f-aortaAbdFlap', flow:'f-aortaAbdFlow' });
+      }
+      const segs = mainAortaSegs.map(s => ({
+        label: s.label, diam: getVal(s.diam), flap: getVal(s.flap), flow: getVal(s.flow)
+      })).filter(s => s.diam || s.flap || s.flow);
+      if (segs.length) rows.push({ t: 'aortaTable', segs });
+
+      if (detailedOn) {
+        const abdDetailedRaw = [
+          { label:'Proximal',        diam:'f-aortaAbdProxDiam', flap:'f-aortaAbdProxFlap', flow:'f-aortaAbdProxFlow' },
+          { label:'Mid',             diam:'f-aortaAbdMidDiam',  flap:'f-aortaAbdMidFlap',  flow:'f-aortaAbdMidFlow' },
+          { label:'Distal',          diam:'f-aortaAbdDistDiam', flap:'f-aortaAbdDistFlap', flow:'f-aortaAbdDistFlow' },
+          { label:'R. common iliac', diam:'f-aortaRIliacDiam',  flap:'f-aortaRIliacFlap',  flow:'f-aortaRIliacFlow' },
+          { label:'L. common iliac', diam:'f-aortaLIliacDiam',  flap:'f-aortaLIliacFlap',  flow:'f-aortaLIliacFlow' }
+        ];
+        const abdDetailedSegs = abdDetailedRaw.map(s => ({
+          label: s.label, diam: getVal(s.diam), flap: getVal(s.flap), flow: getVal(s.flow)
+        })).filter(s => s.diam || s.flap || s.flow);
+        if (abdDetailedSegs.length) {
+          rows.push({ t: 'aortaTable', segs: abdDetailedSegs, abdLabel: 'ABDOMINAL AORTA' });
         }
-      });
+      }
     });
   }
 
@@ -12692,6 +13457,7 @@ function renderExportRowsToPrintHTML(rows) {
   let inSection = false;
   let currentSectionTitle = '';
   let fieldGridOpen = false;
+  let fieldGridCols = 2;
   const fieldPairBuffer = [];
 
   function flushMetaPairs(padOddWithEmpty) {
@@ -12724,27 +13490,29 @@ function renderExportRowsToPrintHTML(rows) {
     }
   }
   function flushFieldPairs(padOddWithEmpty, emptyClass = 'print-fld-empty') {
-    while (fieldPairBuffer.length >= 2) {
-      const a = fieldPairBuffer.shift();
-      const b = fieldPairBuffer.shift();
-      parts.push(a.k, a.v, b.k, b.v);
+    while (fieldPairBuffer.length >= fieldGridCols) {
+      const items = [];
+      for (let i = 0; i < fieldGridCols; i++) items.push(fieldPairBuffer.shift());
+      for (const a of items) parts.push(a.k, a.v);
     }
-    if (padOddWithEmpty && fieldPairBuffer.length === 1) {
-      const a = fieldPairBuffer.shift();
-      parts.push(
-        a.k,
-        a.v,
-        `<div class="print-fld-k ${emptyClass}" aria-hidden="true">&nbsp;</div>`,
-        `<div class="print-fld-v ${emptyClass}" aria-hidden="true">&nbsp;</div>`
-      );
+    if (padOddWithEmpty && fieldPairBuffer.length > 0) {
+      const remaining = fieldPairBuffer.splice(0);
+      for (const a of remaining) parts.push(a.k, a.v);
+      const emptiesToAdd = fieldGridCols - remaining.length;
+      for (let i = 0; i < emptiesToAdd; i++) {
+        parts.push(
+          `<div class="print-fld-k ${emptyClass}" aria-hidden="true">&nbsp;</div>`,
+          `<div class="print-fld-v ${emptyClass}" aria-hidden="true">&nbsp;</div>`
+        );
+      }
     }
   }
   function ensureFieldGridOpen() {
     if (!fieldGridOpen) {
-      const cls =
-        currentSectionTitle === 'FUSIC HD QUESTIONS'
-          ? 'print-field-grid print-field-grid--fusic'
-          : 'print-field-grid';
+      let cls;
+      if (currentSectionTitle === 'FUSIC HD QUESTIONS') cls = 'print-field-grid print-field-grid--fusic';
+      else if (fieldGridCols === 3) cls = 'print-field-grid print-field-grid--3col';
+      else cls = 'print-field-grid';
       parts.push(`<div class="${cls}">`);
       fieldGridOpen = true;
     }
@@ -12763,6 +13531,7 @@ function renderExportRowsToPrintHTML(rows) {
       inSection = false;
     }
     currentSectionTitle = '';
+    fieldGridCols = 2;
   }
 
   for (const r of rows) {
@@ -12813,6 +13582,7 @@ function renderExportRowsToPrintHTML(rows) {
       parts.push(`<h2 class="print-section-title">${esc(r.title)}</h2>`);
       inSection = true;
       currentSectionTitle = r.title;
+      fieldGridCols = r.title === 'VALVES' ? 3 : 2;
     } else if (r.t === 'subhdr') {
       closeMeta();
       if (!inSection) {
@@ -12854,9 +13624,48 @@ function renderExportRowsToPrintHTML(rows) {
       flushFieldPairs(true, 'print-fld-empty print-fld-empty--line-pad');
       parts.push(`<div class="print-fld-k print-indication-k">Indication</div>`);
       parts.push(`<div class="print-fld-v print-indication-v">${esc(r.value)}</div>`);
+    } else if (r.t === 'wideRow') {
+      closeMeta();
+      if (!inSection) {
+        parts.push('<section class="print-section">');
+        inSection = true;
+      }
+      ensureFieldGridOpen();
+      flushFieldPairs(true, 'print-fld-empty print-fld-empty--line-pad');
+      parts.push(`<div class="print-fld-k print-indication-k">${esc(r.label)}</div>`);
+      parts.push(`<div class="print-fld-v print-indication-v">${esc(r.value)}</div>`);
     } else if (r.t === 'rwmaDiagram') {
       closeFieldGrid();
       parts.push(buildRwmaPrintSVG(r.states));
+    } else if (r.t === 'aortaTable') {
+      closeFieldGrid();
+      const segs = r.segs;
+      const hasDiam = segs.some(s => s.diam);
+      const hasFlap = segs.some(s => s.flap);
+      const hasFlow = segs.some(s => s.flow);
+      if (r.abdLabel) {
+        parts.push(`<div style="font-size:7.5pt;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:0.05em;margin:6px 0 2px;">${esc(r.abdLabel)}</div>`);
+      }
+      let tbl = '<table class="print-aorta-table"><thead><tr><th></th>';
+      for (const s of segs) tbl += `<th>${esc(s.label)}</th>`;
+      tbl += '</tr></thead><tbody>';
+      if (hasDiam) {
+        tbl += '<tr><th>Diameter</th>';
+        for (const s of segs) tbl += `<td>${s.diam ? `${esc(s.diam)} mm` : '—'}</td>`;
+        tbl += '</tr>';
+      }
+      if (hasFlap) {
+        tbl += '<tr><th>Dissection Flap</th>';
+        for (const s of segs) tbl += `<td>${s.flap ? esc(s.flap) : '—'}</td>`;
+        tbl += '</tr>';
+      }
+      if (hasFlow) {
+        tbl += '<tr><th>Colour Flow Pattern</th>';
+        for (const s of segs) tbl += `<td>${s.flow ? esc(s.flow) : '—'}</td>`;
+        tbl += '</tr>';
+      }
+      tbl += '</tbody></table>';
+      parts.push(tbl);
     } else if (r.t === 'summaryConclusionsBlock') {
       closeMeta();
       const sig = (r.significance || '').trim();
@@ -13003,6 +13812,537 @@ function doExportPrintPdf() {
   );
 }
 
+// ─── RF FORM PDF EXPORT ────────────────────────────────
+
+function rfV(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+  if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') return (el.value || '').trim();
+  if (el.tagName === 'SELECT') return (el.value || '').trim();
+  return (el.textContent || '').trim();
+}
+
+function rfEsc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function rfVentLabel() {
+  const vent = rfV('f-ventilation');
+  const mode = rfV('f-ventilatory-mode');
+  if (vent.startsWith('Self-Vent')) return 'unsupported';
+  if (mode === 'Mandatory/IPPV') return 'IPPV';
+  if (mode.startsWith('Patient-triggered') || mode === 'APRV') return 'PSV';
+  return '';
+}
+
+function rfVexusScore() {
+  const el = document.getElementById('vexus-display');
+  if (!el || el.classList.contains('empty')) return '';
+  const m = (el.textContent || '').match(/\b([0-3])\b/);
+  return m ? m[1] : '';
+}
+
+function rfLapRisk() {
+  const el = document.getElementById('lap-interp-display');
+  if (!el || el.classList.contains('empty')) return '';
+  const t = el.textContent.toLowerCase();
+  if (t.includes('high')) return 'high';
+  if (t.includes('low')) return 'low';
+  return '';
+}
+
+function rfFac() {
+  const eda = parseFloat(rfV('f-rvEDA'));
+  const esa = parseFloat(rfV('f-rvESA'));
+  if (!isNaN(eda) && !isNaN(esa) && eda > 0) return ((eda - esa) / eda * 100).toFixed(0);
+  return '';
+}
+
+function rfDi() {
+  const v1 = parseFloat(rfV('f-lvotVTI-valve'));
+  const v2 = parseFloat(rfV('f-avVTI'));
+  if (!isNaN(v1) && !isNaN(v2) && v2 > 0) return (v1 / v2).toFixed(2);
+  const vm1 = parseFloat(rfV('f-lvotVMax'));
+  const vm2 = parseFloat(rfV('f-avVMax'));
+  if (!isNaN(vm1) && !isNaN(vm2) && vm2 > 0) return (vm1 / vm2).toFixed(2);
+  return '';
+}
+
+function rfPeri() {
+  const v = rfV('f-periEffusion');
+  if (!v || v === 'None') return { yn: v === 'None' ? 'no' : '', size: '' };
+  return { yn: 'yes', size: v };
+}
+
+function rfHepCol() {
+  const v = rfV('f-hepaticVein');
+  if (v === 'S>D') return 0;
+  if (v === 'S<D') return 1;
+  if (v === 'S reversal / D only') return 2;
+  return -1;
+}
+
+function rfPortCol() {
+  const v = rfV('f-portalVein');
+  if (v === '<0.3') return 0;
+  if (v === '0.3-0.5') return 1;
+  if (v === '>0.5') return 2;
+  return -1;
+}
+
+function rfRenalCol() {
+  const v = rfV('f-renalVein');
+  if (v === 'Continuous') return 0;
+  if (v === 'Biphasic') return 1;
+  if (v === 'Monophasic') return 2;
+  return -1;
+}
+
+function rfBoldOpt(options, matchValue) {
+  return options.map(o => {
+    const match = matchValue && o === matchValue;
+    return match ? `<strong><u>${rfEsc(o)}</u></strong>` : rfEsc(o);
+  }).join(' &nbsp;|&nbsp; ');
+}
+
+function rfHighlightCol(idx, matchIdx) {
+  const sel = matchIdx >= 0 && idx === matchIdx;
+  return `style="padding:3px 5px;vertical-align:top;border:0.5pt solid #bbb;background:#fff;${sel ? 'font-weight:700;text-decoration:underline;' : ''}"`;
+}
+
+function buildRfFormHtml() {
+  const e = rfEsc;
+  const v = rfV;
+
+  const T  = 'border:0.5pt solid #bbb;';
+  const LBL = `padding:3px 5px;vertical-align:top;${T}background:#D8DAE6;font-weight:600;font-size:0.9em;color:#111;`;
+  const VAL = `padding:3px 5px;vertical-align:top;${T}background:#fff;`;
+  const NOTE = `padding:3px 5px;vertical-align:top;${T}background:#f5f5f5;font-size:0.85em;color:#333;`;
+  const HDR  = `padding:4px 7px;background:#3d5585;color:#fff;font-weight:700;font-size:1.05em;border:1pt solid #2d4070;`;
+
+  const ref  = s => `<span style="display:block;font-size:0.72em;color:#555;margin-top:1px">${s}</span>`;
+  const val  = (fv, unit) => fv ? `<strong>${e(fv)}</strong>${unit ? ` <span style="font-size:0.85em;color:#444">${unit}</span>` : ''}` : '';
+
+  // Logo
+  const logoSrc = (typeof __fhdLogoDataUrl !== 'undefined' && __fhdLogoDataUrl) ? __fhdLogoDataUrl : './FHD.jpg';
+  const logo = `<img src="${logoSrc}" style="height:36px;vertical-align:middle" alt="FUSIC HD">`;
+
+  // Patient block
+  const pn = v('f-patientName'), pid = v('f-patientId'), dob = v('f-dob');
+  const sex = v('f-sex'), age = v('f-age'), wt = v('f-weight'), ht = v('f-height');
+  const patLines = [pn, pid ? `ID: ${pid}` : '', dob ? `DOB: ${dob}` : '', sex,
+    age ? `Age: ${age}y` : '', (wt || ht) ? `${wt ? wt + 'kg' : ''}${wt && ht ? ' / ' : ''}${ht ? ht + 'cm' : ''}` : '']
+    .filter(Boolean).map(l => `<div>${e(l)}</div>`).join('');
+
+  // Ventilation
+  const ventMatch = rfVentLabel();
+  const ventHtml = ['IPPV', 'PSV', 'unsupported'].map(o =>
+    o === ventMatch ? `<strong><u>${o}</u></strong>` : o
+  ).join(' &nbsp;|&nbsp; ');
+
+  // Visual EF
+  const efVal = v('f-ef');
+
+  // B lines
+  const blVal = v('f-bLinesLung');
+  const blYes = blVal === 'Yes - Bilateral' || blVal === 'Yes - Focal/Unilateral';
+  const blNo  = blVal === 'No';
+  const bHtml = `${blYes ? '<strong><u>yes</u></strong>' : 'yes'} &nbsp;|&nbsp; ${blNo ? '<strong><u>no</u></strong>' : 'no'}`;
+
+  // Septal deviation
+  const sepVal = v('f-atrialSeptalDev');
+  const sepHtml = ['no', 'Into RA', 'Into LA'].map(o => {
+    const match = (o === 'no' && (sepVal === 'None' || sepVal === 'No'))
+               || (o === 'Into RA' && sepVal === 'Into RA')
+               || (o === 'Into LA' && sepVal === 'Into LA');
+    return match ? `<strong><u>${e(o)}</u></strong>` : e(o);
+  }).join(' &nbsp;|&nbsp; ');
+
+  // LAP risk
+  const lapRisk = rfLapRisk();
+  const lapHigh = lapRisk === 'high' ? '<strong><u>high</u></strong>' : 'high';
+  const lapLow  = lapRisk === 'low'  ? '<strong><u>low</u></strong>'  : 'low';
+
+  // Pericardium
+  const peri = rfPeri();
+  const periYes = peri.yn === 'yes' ? '<strong><u>yes</u></strong>' : 'yes';
+  const periNo  = peri.yn === 'no'  ? '<strong><u>no</u></strong>'  : 'no';
+  const periLoc = ['f-periGlobal', 'f-periAnterior', 'f-periPosterior', 'f-periLateral']
+    .map((id, i) => document.getElementById(id)?.checked ? ['Global','Anterior','Posterior','Lateral'][i] : '')
+    .filter(Boolean).join(', ');
+
+  // PHT basic features
+  const PHT_BASIC = ['RV dilation', 'RV:LV basal diameter ratio >1', 'D-Shaped Septum (Septal flattening)', 'IVC >2cm'];
+  const phtBasicHtml = PHT_BASIC.map(k => {
+    const on = typeof selectedPHTBasic !== 'undefined' && selectedPHTBasic.has(k);
+    const labels = { 'RV dilation': 'RV dilatation', 'RV:LV basal diameter ratio >1': 'RV:LV basal diameter ratio >1',
+                     'D-Shaped Septum (Septal flattening)': 'D-Shaped Septum (Septal flattening)', 'IVC >2cm': 'IVC >2cm' };
+    return `<div style="margin:1px 0">${on ? '&#9745;' : '&#9744;'} ${e(labels[k])}</div>`;
+  }).join('');
+
+  // PHT advanced features
+  const phtNotch = typeof selectedPHTAdvanced !== 'undefined' && selectedPHTAdvanced.has('Systolic notching of RVOT Doppler');
+  const phtAT = v('f-phtRvotAccTime'), phtPR = v('f-phtEarlyDiastolicPrVel'), phtPA = v('f-phtPaDiameter');
+  const phtAdvHtml = [
+    { label: `RVOT acc time &lt;105ms${phtAT ? ': <strong>' + e(phtAT) + 'ms</strong>' : ''}`, tick: phtAT && parseFloat(phtAT) < 105 },
+    { label: 'Systolic notching RVOT Doppler', tick: phtNotch },
+    { label: `Early diastolic PR vel &gt;2.2 m/s${phtPR ? ': <strong>' + e(phtPR) + 'm/s</strong>' : ''}`, tick: phtPR && parseFloat(phtPR) > 2.2 },
+    { label: `PA diameter &gt;25mm${phtPA ? ': <strong>' + e(phtPA) + 'mm</strong>' : ''}`, tick: phtPA && parseFloat(phtPA) > 25 }
+  ].map(f => `<div style="margin:1px 0">${f.tick ? '&#9745;' : '&#9744;'} ${f.label}</div>`).join('');
+
+  // Vein column indices
+  const hepIdx = rfHepCol(), portIdx = rfPortCol(), renalIdx = rfRenalCol();
+  const vexus = rfVexusScore();
+
+  // VExUS cells
+  const vexusCells = [
+    ['0', '0 = IVC &lt;20mm'],
+    ['1', '1 = IVC &gt;20mm + no or mild abnormalities'],
+    ['2', '2 = IVC &gt;20mm + severe abnormalities in 1 vessel'],
+    ['3', '3 = IVC &gt;20mm + severe abnormalities &gt;1 vessel']
+  ].map(([score, label]) => {
+    const sel = vexus === score;
+    return `<td style="padding:3px 5px;vertical-align:top;${T}${sel ? 'font-weight:700;text-decoration:underline;' : ''}">${label}</td>`;
+  }).join('');
+
+  // Aorta value cell
+  const aortaVC = (id) => `<td style="${VAL}"><strong>${e(v(id))}</strong></td>`;
+
+  // Conclusion
+  const concl = [v('f-impression'), v('f-actions')].filter(Boolean).join('\n\n');
+
+  return `<div style="font-family:Arial,Helvetica,sans-serif;font-size:7.5pt;color:#111;width:100%;print-color-adjust:exact;-webkit-print-color-adjust:exact">
+
+<!-- HEADER -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:4px">
+<tr>
+  <td style="padding:0 0 3px 0;width:25%">${logo}</td>
+  <td style="font-size:14pt;font-weight:700;text-align:center;padding:0 0 3px 0;width:45%">Reporting form</td>
+  <td style="text-align:right;font-size:0.85em;color:#555;font-style:italic;padding:0 0 3px 0;width:30%">Ashley Miller updated 2026</td>
+</tr>
+</table>
+
+<!-- PATIENT / SCAN INFO -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr>
+  <td rowspan="3" style="${LBL}width:10%">Patient details</td>
+  <td rowspan="3" style="${VAL}width:22%">${patLines}</td>
+  <td style="${LBL}width:12%">Operator</td>
+  <td style="${VAL}width:12%"><strong>${e(v('f-operatorName'))}</strong></td>
+  <td rowspan="3" style="${LBL}width:14%">Indication /<br>clinical question</td>
+  <td rowspan="3" style="${VAL}width:30%">${e(v('f-indication'))}</td>
+</tr>
+<tr>
+  <td style="${LBL}">Image quality</td>
+  <td style="${VAL}"><strong>${e(v('f-imageQuality'))}</strong></td>
+</tr>
+<tr>
+  <td style="${LBL}">Images stored?</td>
+  <td style="${VAL}"><strong>${e(v('f-imagesStored'))}</strong></td>
+</tr>
+</table>
+
+<!-- VENTILATION -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr>
+  <td style="${LBL}width:9%">Ventilation</td>
+  <td style="${VAL}width:21%">${ventHtml}</td>
+  <td style="${LBL}width:9%">CVS drugs</td>
+  <td style="${VAL}width:13%"></td>
+  <td style="${LBL}width:5%">HR</td>
+  <td style="${VAL}width:9%"><strong>${e(v('f-hr'))}</strong></td>
+  <td style="${LBL}width:4%">BP</td>
+  <td style="${VAL}width:14%"><strong>${v('f-sbp') || v('f-dbp') ? e(v('f-sbp')) + '/' + e(v('f-dbp')) : ''}</strong></td>
+  <td style="${LBL}width:5%">CVP</td>
+  <td style="${VAL}width:11%"><strong>${e(v('f-cvp'))}</strong></td>
+</tr>
+</table>
+
+<!-- LEFT VENTRICLE -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr><td colspan="7" style="${HDR}">Left ventricle</td></tr>
+<tr>
+  <td rowspan="2" style="${LBL}width:13%">Size (end diastole)</td>
+  <td style="${VAL}width:9%">IVSd<br>${ref('normal &lt;12mm')}${val(v('f-ivsd'))}</td>
+  <td colspan="2" style="${VAL}">LVIDd<br>${ref('normal &lt;50mm ♀ &lt;55 ♂<br>severe &gt;60mm ♀ &gt;65 ♂')}${val(v('f-lvidd'))}</td>
+  <td style="${VAL}width:9%">LVPWd<br>${ref('normal &lt;12mm')}${val(v('f-lvpwd'))}</td>
+  <td colspan="2" style="${NOTE}">End diastole — Frame before MV closure <strong>or</strong> start of QRS complex <strong>or</strong> R wave on ECG <strong>or</strong> largest LV cavity size</td>
+</tr>
+<tr>
+  <td style="${VAL}">LVIDs<br>${val(v('f-lvids'))}</td>
+  <td colspan="5" style="${NOTE}font-style:italic">End systole — Frame at AV closure <strong>or</strong> frame before MV opening</td>
+</tr>
+<tr>
+  <td style="${LBL}">Systolic function</td>
+  <td style="${VAL}">EF biplane:<br>${val(v('f-efSimpsonBiplane'), v('f-efSimpsonBiplane') ? '%' : '')}</td>
+  <td style="${VAL}">Visual EF:<br>${val(efVal)}</td>
+  <td style="${NOTE}">Normal: ≥55%<br>Borderline-low: 50–54%<br>Impaired: 36–49%<br>Severely impaired: ≤35%</td>
+  <td style="${VAL}">MAPSE<br>${ref('Normal ≥12mm')}${val(v('f-mapse'))}<br><br>LV S&prime;<br>${ref('Normal ≥7')}${val(v('f-lvSPrime'))}</td>
+  <td colspan="2" style="${VAL}">Regional wall motion<br>${ref('normal thickening &gt;30%')}${val(v('f-rwma'))}${v('f-rwmaDesc') ? '<br>' + val(v('f-rwmaDesc')) : ''}</td>
+</tr>
+<tr>
+  <td style="${LBL}width:13%">VTI, SV, CO,<br>responsiveness</td>
+  <td style="${VAL}width:11%">LVOT VTI<br>${ref('normal 18–22cm')}${val(v('f-lvotVTI'))}</td>
+  <td style="${VAL}width:12%">LVOT diameter<br>${ref('normal 18–22mm')}${val(v('f-lvotDiam'))}</td>
+  <td style="${VAL}width:17%">SV<br>${val(v('sv-display-input'))}</td>
+  <td style="${VAL}width:9%">CO<br>${val(v('co-display-input'))}</td>
+  <td style="${VAL}width:14%">VTI % &Delta; respiration:<br>${val(v('f-vtiDeltaResp'))}</td>
+  <td style="${VAL}width:24%">VTI % &Delta; with intervention<br>${ref('(PLR, fluid, pressor, inotrope):')}${val(v('f-vtiDeltaIntervention'))}</td>
+</tr>
+</table>
+
+<!-- LEFT ATRIAL PRESSURE -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr><td colspan="6" style="${HDR}">Left atrial pressure</td></tr>
+<tr>
+  <td style="${LBL}width:13%">Lungs</td>
+  <td style="${NOTE}width:10%">B lines?</td>
+  <td colspan="4" style="${VAL}">${bHtml}</td>
+</tr>
+<tr>
+  <td style="${LBL}">LA (end systole)</td>
+  <td style="${VAL}">diameter<br>${ref('dilated &gt;45/50mm')}${val(v('f-laDiamSys'))}</td>
+  <td style="${VAL}width:14%">area<br>${ref('dilated &gt;22cm²')}${val(v('f-laArea'))}</td>
+  <td colspan="3" style="${VAL}">septal deviation throughout cardiac cycle?<br>${sepHtml}</td>
+</tr>
+<tr>
+  <td style="${LBL}">MV Doppler</td>
+  <td style="${VAL}">E velocity<br>${val(v('f-eWave'))}</td>
+  <td colspan="4" style="${VAL}">TR Vmax<br>${ref('&gt;2.8 m/s high risk &nbsp; &lt;2.8 m/s low risk')}${val(v('f-trVmaxLAP'))}</td>
+</tr>
+<tr>
+  <td style="${LBL}">Tissue Doppler</td>
+  <td style="${VAL}">e&prime; lateral<br>${val(v('f-eLateral'))}</td>
+  <td style="${VAL}">e&prime; septal<br>${val(v('f-eSeptal'))}</td>
+  <td style="${VAL}">e&prime; average<br>${val(v('eprime-avg-input'))}</td>
+  <td colspan="2" style="${VAL}">E/e&prime; (average e&prime;)<br>${ref('&gt;14 high risk &nbsp; &lt;8 low risk')}${val(v('ee-display-input'))}</td>
+</tr>
+<tr>
+  <td colspan="2" style="${LBL}">Overall risk of raised LAP</td>
+  <td colspan="2" style="${VAL}">${lapHigh}</td>
+  <td style="${VAL}">${lapLow}</td>
+  <td style="${NOTE}">see FUSIC LAP algorithm</td>
+</tr>
+</table>
+
+<!-- RIGHT HEART -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr><td colspan="7" style="${HDR}">Right heart</td></tr>
+<tr>
+  <td style="${LBL}width:13%">RV size</td>
+  <td style="${VAL}">Basal<br>${ref('normal &lt;45mm')}${val(v('f-rvBasalDiam'))}</td>
+  <td style="${VAL}">Mid<br>${ref('normal &lt;40mm')}${val(v('f-rvMidDiam'))}</td>
+  <td style="${VAL}">Longitudinal<br>${ref('normal &lt;85mm')}${val(v('f-rvLongDiam'))}</td>
+  <td style="${VAL}">RVOT proximal<br>${ref('normal &lt;45mm')}${val(v('f-rvotProx'))}</td>
+  <td style="${VAL}">RV wall thickness<br>${ref('normal ≥5mm')}${val(v('f-rvWallThick'))}</td>
+  <td style="${VAL}">RA area<br>${ref('normal &lt;18cm²')}${val(v('f-raArea'))}</td>
+</tr>
+<tr>
+  <td style="${LBL}">Systolic function</td>
+  <td style="${VAL}">FAC<br>${ref('normal &gt;30%')}${val(rfFac(), rfFac() ? '%' : '')}</td>
+  <td style="${VAL}">TAPSE<br>${ref('Normal ≥17mm')}${val(v('f-tapse'))}</td>
+  <td style="${VAL}">RV S&prime;<br>${ref('normal &gt;9')}${val(v('f-rvS'))}</td>
+  <td colspan="3" style="${VAL}">Visual impression<br><strong>${e(v('f-rvVisLongitudinal'))}${v('f-rvVisLongitudinal') && v('f-rvVisRadial') ? ' / ' : ''}${e(v('f-rvVisRadial'))}</strong></td>
+</tr>
+<tr>
+  <td style="${LBL}">Pressure assessment</td>
+  <td colspan="2" style="${VAL}">TR Vmax<br>${ref('&lt;2.8 low &nbsp; 2.8–3.4 intermediate &nbsp; &gt;3.4 high')}${val(v('f-trVmaxPH'))}</td>
+  <td colspan="2" style="${VAL}">Basic features of PHT ${ref('(circle or tick):')}${phtBasicHtml}</td>
+  <td colspan="2" style="${VAL}">Advanced features of PHT ${ref('(circle or tick):')}${phtAdvHtml}</td>
+</tr>
+</table>
+
+<!-- PAGE BREAK -->
+<div style="page-break-before:always"></div>
+
+<!-- VALVES -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr><td colspan="5" style="${HDR}">Valves</td></tr>
+<tr>
+  <td style="${LBL}width:8%"></td>
+  <td style="${NOTE}width:18%">Opening (normal / restricted)</td>
+  <td style="${NOTE}width:18%">Thin, thick, calcified, masses</td>
+  <td style="${NOTE}width:18%">Significant regurg on colour?</td>
+  <td style="${NOTE}width:38%"></td>
+</tr>
+<tr>
+  <td style="${LBL}">AV</td>
+  <td style="${VAL}"><strong>${e(v('f-avApp'))}</strong></td>
+  <td style="${VAL}"><strong>${e(v('f-avSten'))}</strong></td>
+  <td style="${VAL}"><strong>${e(v('f-avReg'))}</strong></td>
+  <td style="${VAL}"><div>LVOT VTI = V1: <strong>${e(v('f-lvotVTI-valve'))}</strong></div><div>AV VTI = V2: <strong>${e(v('f-avVTI'))}</strong></div>${v('f-avVMax') ? `<div>AV VMax: <strong>${e(v('f-avVMax'))}</strong> m/s</div>` : ''}${v('f-lvotVMax') ? `<div>LVOT VMax: <strong>${e(v('f-lvotVMax'))}</strong> m/s</div>` : ''}<div>Dimensionless index: <strong>${e(rfDi())}</strong></div>${ref('(Severe AS &lt;0.25)')}</td>
+</tr>
+<tr>
+  <td style="${LBL}">MV</td>
+  <td style="${VAL}"><strong>${e(v('f-mvApp'))}</strong></td>
+  <td style="${VAL}"><strong>${e(v('f-mvSten'))}</strong></td>
+  <td style="${VAL}"><strong>${e(v('f-mvReg'))}</strong></td>
+  <td style="${NOTE}"><strong>Features of LVOTO / SAM?</strong><br><span style="font-size:0.85em">MV leaflets directed to LVOT in mid-late systole<br>High LVOT velocity + turbulence<br>Posteriorly directed MR jet</span></td>
+</tr>
+<tr>
+  <td style="${LBL}">TV</td>
+  <td style="${VAL}"><strong>${e(v('f-tvApp'))}</strong></td>
+  <td style="${VAL}"><strong>${e(v('f-tvSten'))}</strong></td>
+  <td style="${VAL}"><strong>${e(v('f-tvReg'))}</strong></td>
+  <td style="${NOTE}"><strong>MV and TV inflow variation</strong> (if pericardial effusion)<br><span style="font-size:0.85em">Context dependent – ventilation, loading, HR etc</span></td>
+</tr>
+<tr>
+  <td style="${LBL}">PV</td>
+  <td style="${VAL}"><strong>${e(v('f-pvApp'))}</strong></td>
+  <td style="${VAL}"><strong>${e(v('f-pvSten'))}</strong></td>
+  <td style="${VAL}"><strong>${e(v('f-pvReg'))}</strong></td>
+  <td style="${VAL}"></td>
+</tr>
+</table>
+
+<!-- PERICARDIUM -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr><td colspan="7" style="${HDR}">Pericardium</td></tr>
+<tr>
+  <td style="${LBL}width:10%">Effusion</td>
+  <td style="${VAL}width:7%">${periYes}</td>
+  <td style="${VAL}width:7%">${periNo}</td>
+  <td style="${VAL}width:12%">size: <strong>${e(peri.size)}</strong></td>
+  <td style="${VAL}width:16%">location (global/regional)<br><strong>${e(periLoc)}</strong></td>
+  <td style="${VAL}width:15%">appearance<br><strong>${e(v('f-periAppearance'))}</strong></td>
+  <td style="${NOTE}width:33%">RA collapse early systole?<br>RV collapse early diastole?<br>${ref('Longer collapse = greater likelihood of tamponade')}</td>
+</tr>
+</table>
+
+<!-- AORTA -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr><td colspan="7" style="${HDR}">Aorta</td></tr>
+<tr>
+  <td style="${LBL}width:11%">Size</td>
+  <td style="${VAL}">root (STJ)<br>${ref('&gt;40mm=abnormal')}${val(v('f-aortaRootDiam'))}</td>
+  <td style="${VAL}">ascending<br>${ref('2cm distal to STJ<br>&gt;40mm=abnormal')}${val(v('f-aortaAscDiam'))}</td>
+  <td style="${VAL}">arch<br>${val(v('f-aortaArchDiam'))}</td>
+  <td style="${VAL}">descending<br>${val(v('f-aortaDescDiam'))}</td>
+  <td style="${VAL}">abdominal<br>${val(v('f-aortaAbdDiam'))}</td>
+  <td rowspan="3" style="${NOTE}"><strong>Features of aortic root dissection:</strong><br>Dissection flap<br>Dilated root (&gt;4cm)<br>AR<br>Pericardial effusion</td>
+</tr>
+<tr>
+  <td style="${LBL}">Dissection flap</td>
+  ${aortaVC('f-aortaRootFlap')}${aortaVC('f-aortaAscFlap')}${aortaVC('f-aortaArchFlap')}${aortaVC('f-aortaDescFlap')}${aortaVC('f-aortaAbdFlap')}
+</tr>
+<tr>
+  <td style="${LBL}">Colour flow pattern</td>
+  ${aortaVC('f-aortaRootFlow')}${aortaVC('f-aortaAscFlow')}${aortaVC('f-aortaArchFlow')}${aortaVC('f-aortaDescFlow')}${aortaVC('f-aortaAbdFlow')}
+</tr>
+</table>
+
+<!-- VEINS -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr><td colspan="5" style="${HDR}">Veins</td></tr>
+<tr>
+  <td style="${LBL}width:18%">IVC size (short axis preferred)</td>
+  <td colspan="2" style="${NOTE}">normal &lt;20mm</td>
+  <td colspan="2" style="${VAL}"><strong>${e(v('f-ivcDiam'))}</strong></td>
+</tr>
+<tr>
+  <td style="${LBL}">Hepatic vein</td>
+  <td ${rfHighlightCol(0, hepIdx)}>S&gt;D<br>${ref('normal')}</td>
+  <td ${rfHighlightCol(1, hepIdx)}>S&lt;D<br>${ref('mildly abnormal')}</td>
+  <td ${rfHighlightCol(2, hepIdx)} colspan="2">S reversal / D only<br>${ref('severely abnormal')}</td>
+</tr>
+<tr>
+  <td style="${LBL}">Portal vein</td>
+  <td style="${NOTE}">pulsatility index</td>
+  <td ${rfHighlightCol(0, portIdx)}>normal &lt;0.3</td>
+  <td ${rfHighlightCol(1, portIdx)}>mild 0.3–0.5</td>
+  <td ${rfHighlightCol(2, portIdx)}><strong>Severe</strong> &gt;0.5</td>
+</tr>
+<tr>
+  <td style="${LBL}">Renal interlobar vein</td>
+  <td ${rfHighlightCol(0, renalIdx)}>normal – continuous</td>
+  <td ${rfHighlightCol(1, renalIdx)}>mild – biphasic</td>
+  <td ${rfHighlightCol(2, renalIdx)}>severe – monophasic</td>
+  <td style="${NOTE}">VII (optional)</td>
+</tr>
+<tr>
+  <td style="${LBL}">Renal interlobar artery</td>
+  <td colspan="4" style="${VAL}">RRI (optional): <strong>${e(v('rri-display-input'))}</strong></td>
+</tr>
+<tr>
+  <td style="${LBL}">VExUS score</td>
+  ${vexusCells}
+</tr>
+</table>
+
+<!-- CONCLUSION -->
+<table style="width:100%;border-collapse:collapse;margin-bottom:2px">
+<tr><td style="${HDR}">Conclusion, comments, clinical significance, suggested actions, further imaging required?</td></tr>
+<tr><td style="${VAL}min-height:80px;height:80px;white-space:pre-wrap;vertical-align:top">${e(concl)}</td></tr>
+</table>
+
+</div>`;
+}
+
+function doExportRfFormPdf() {
+  closeExportDropdown();
+  closePlainTextReportView();
+  closeExportModal();
+  if (typeof syncPHTBasicAutoSelections === 'function') syncPHTBasicAutoSelections();
+
+  const mount = document.getElementById('rfFormPrintMount');
+  if (!mount) return;
+
+  const previousDocumentTitle = document.title;
+  mount.innerHTML = buildRfFormHtml();
+
+  const mask = document.getElementById('fusicPrintMask');
+  const siblings = [...document.body.children].filter(el => el !== mount && el !== mask);
+  const saved = new Map();
+
+  function enterPrintLayout() {
+    const pn = (document.getElementById('f-patientName')?.value || '').trim();
+    const pid = (document.getElementById('f-patientId')?.value || '').trim();
+    if (pn || pid) document.title = pn && pid ? `${pn} / ${pid}` : (pn || pid);
+    if (mask) mask.classList.add('active');
+    siblings.forEach(el => { saved.set(el, el.style.display); el.style.display = 'none'; });
+    mount.style.cssText = 'display:block!important;position:static!important;width:100%!important;height:auto!important;max-height:none!important;overflow:visible!important;pointer-events:auto!important;';
+    mount.setAttribute('aria-hidden', 'false');
+    void mount.offsetHeight;
+  }
+
+  function exitPrintLayout() {
+    document.title = previousDocumentTitle;
+    mount.style.cssText = '';
+    mount.innerHTML = '';
+    mount.setAttribute('aria-hidden', 'true');
+    saved.forEach((dv, el) => { el.style.display = dv ?? ''; });
+    saved.clear();
+    if (mask) mask.classList.remove('active');
+  }
+
+  enterPrintLayout();
+
+  const isAndroid = /Android/i.test(navigator.userAgent || '');
+  let cleaned = false;
+  function cleanup() {
+    if (cleaned) return;
+    cleaned = true;
+    exitPrintLayout();
+    window.removeEventListener('afterprint', cleanup);
+    window.removeEventListener('focus', cleanup);
+  }
+
+  if (!isAndroid) window.addEventListener('afterprint', cleanup);
+  else window.addEventListener('focus', cleanup, { once: true });
+
+  const delayMs = isAndroid ? 400 : 80;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.print();
+        setTimeout(cleanup, isAndroid ? 30000 : 6000);
+      }, delayMs);
+    });
+  });
+
+  showToast('Print dialog opened — choose Save as PDF (A4)', 'success');
+}
+
 async function doExportClipboardText() {
   const valid = validateForm();
   const text = getPlainTextReportFullString();
@@ -13021,132 +14361,633 @@ function doExport() {
   const rows = getExportRowsOrdered();
   const { date: nd, time: nt } = getNow();
   // Build worksheet
-  const wsData = [], merges = [], rStyle = {};
+  const wsData = [], merges = [], rStyle = {}, rowHeights = {};
   let sheetRi = 0;
+  // Helper: push a full-width (A–C) row
+  const pushWide = (cells, style) => {
+    wsData.push(cells);
+    merges.push({ s: { r: sheetRi, c: 0 }, e: { r: sheetRi, c: 2 } });
+    if (style) rStyle[sheetRi] = style;
+    sheetRi++;
+  };
+  // Helper: push a label/value row with B+C merged.
+  // Excel won't auto-fit height for merged cells, so we estimate it from text length.
+  const pushKV = (label, value, style) => {
+    wsData.push([label, value, '']);
+    merges.push({ s: { r: sheetRi, c: 1 }, e: { r: sheetRi, c: 2 } });
+    if (style) rStyle[sheetRi] = style;
+    const chars = String(value || '').length;
+    if (chars > 55) rowHeights[sheetRi] = Math.ceil(chars / 55) * 15;
+    sheetRi++;
+  };
+
+  let currentSection = '';
   rows.forEach(r => {
     if (r.t === 'title') {
-      wsData.push([r.value, '']);
-      merges.push({ s: { r: sheetRi, c: 0 }, e: { r: sheetRi, c: 1 } });
-      rStyle[sheetRi] = 'title';
-      sheetRi++;
+      pushWide([r.value, '', ''], 'title');
     } else if (r.t === 'blank') {
-      wsData.push(['', '']);
-      sheetRi++;
+      wsData.push(['', '', '']); sheetRi++;
     } else if (r.t === 'meta') {
-      wsData.push([r.label, r.value]);
-      rStyle[sheetRi] = 'meta';
-      sheetRi++;
+      pushKV(r.label, r.value, 'meta');
     } else if (r.t === 'section') {
-      wsData.push([r.title, '']);
-      merges.push({ s: { r: sheetRi, c: 0 }, e: { r: sheetRi, c: 1 } });
-      rStyle[sheetRi] = 'section';
-      sheetRi++;
+      currentSection = r.title;
+      pushWide([r.title, '', ''], 'section');
     } else if (r.t === 'subhdr') {
-      wsData.push([r.value, '']);
-      merges.push({ s: { r: sheetRi, c: 0 }, e: { r: sheetRi, c: 1 } });
-      rStyle[sheetRi] = 'subhdr';
-      sheetRi++;
+      pushWide([r.value, '', ''], 'subhdr');
     } else if (r.t === 'nonFusicDisclaimer') {
-      wsData.push(['Non-FUSIC HD measurement disclaimer', '', '']);
-      merges.push({ s: { r: sheetRi, c: 0 }, e: { r: sheetRi, c: 2 } });
-      rStyle[sheetRi] = 'nonfusicHdr';
-      sheetRi++;
-      wsData.push([r.intro, '', '']);
-      merges.push({ s: { r: sheetRi, c: 0 }, e: { r: sheetRi, c: 2 } });
-      rStyle[sheetRi] = 'nonfusicIntro';
-      sheetRi++;
-      const nc = NONFUSIC_DISCLAIMER_EXPORT_COLUMNS;
-      for (let i = 0; i < r.items.length; i += nc) {
-        const row3 = [];
-        for (let j = 0; j < nc; j++) {
-          const it = r.items[i + j];
-          row3.push(it != null && it !== '' ? `• ${it}` : '');
-        }
-        wsData.push(row3);
-        rStyle[sheetRi] = 'nonfusicBullet';
-        sheetRi++;
-      }
+      // omitted from Excel export
     } else if (r.t === 'reportDisclaimer') {
-      wsData.push([r.text, '']);
-      merges.push({ s: { r: sheetRi, c: 0 }, e: { r: sheetRi, c: 1 } });
-      rStyle[sheetRi] = 'reportDisclaimer';
-      sheetRi++;
+      pushWide([r.text, '', ''], 'reportDisclaimer');
     } else if (r.t === 'rwmaDiagram') {
       const st = r.states; const groups = [[],[],[],[]];
       for (let i = 1; i <= 17; i++) groups[st[i]||0].push(i);
       const mn = RWMA.MNAMES, nm = RWMA.NAMES;
-      [1,2,3].forEach(s => { if (groups[s].length) { wsData.push([`  RWMA ${mn[s]}`, groups[s].map(n => `${n} (${nm[n]})`).join(', ')]); rStyle[sheetRi] = 'row'; sheetRi++; } });
+      [1,2,3].forEach(s => { if (groups[s].length) { pushKV(`  RWMA ${mn[s]}`, groups[s].map(n => `${n} (${nm[n]})`).join(', '), 'row'); } });
     } else if (r.t === 'indicationRow') {
-      wsData.push(['Indication', r.value]);
-      rStyle[sheetRi] = 'row';
-      sheetRi++;
+      pushKV('Indication', r.value, 'row');
     } else if (r.t === 'row') {
-      wsData.push([r.label, r.value]);
-      rStyle[sheetRi] = 'row';
-      sheetRi++;
+      const style = currentSection === 'FUSIC HD QUESTIONS' ? 'fusicRow' : 'row';
+      pushKV(r.label, r.value, style);
     } else if (r.t === 'summaryConclusionsBlock') {
       const sig = (r.significance || '').trim();
       const imp = (r.impression || '').trim();
       const act = (r.actions || '').trim();
-      if (sig) {
-        wsData.push(['Clinical significance', sig]);
-        rStyle[sheetRi] = 'row';
-        sheetRi++;
-      }
-      if (imp) {
-        wsData.push(['Overall impression', imp]);
-        rStyle[sheetRi] = 'row';
-        sheetRi++;
-      }
-      if (act) {
-        wsData.push(['Recommended actions', act]);
-        rStyle[sheetRi] = 'row';
-        sheetRi++;
-      }
+      if (sig) pushKV('Clinical significance', sig, 'summaryRow');
+      if (imp) pushKV('Overall impression', imp, 'summaryRow');
+      if (act) pushKV('Recommended actions', act, 'summaryRow');
     }
   });
 
   if (typeof XLSX === 'undefined' || !XLSX.utils) {
-    showToast(
-      'Excel export unavailable — the workbook library did not load (often because you\'re offline). Connect briefly once while online to cache it, or use Print/PDF.',
-      'warn'
-    );
+    showToast('Reporting library failed to load — please refresh while online.', 'warn');
     return;
   }
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   ws['!merges'] = merges;
-  ws['!cols'] = [{ wch: 30 }, { wch: 30 }, { wch: 30 }];
+  ws['!cols'] = [{ wch: 70 }, { wch: 35 }, { wch: 25 }];
+  ws['!rows'] = wsData.map((_, ri) => ({ hpx: ri === 0 ? 40 : (rowHeights[ri] || 15) }));
 
-  try {
-    wsData.forEach((rowArr, ri) => {
-      const st = rStyle[ri];
-      const maxCi = Math.max(1, (rowArr && rowArr.length) ? rowArr.length - 1 : 1);
-      for (let ci = 0; ci <= maxCi; ci++) {
-        const ref = XLSX.utils.encode_cell({ r: ri, c: ci });
-        if (!ws[ref]) continue;
-        if (st==='title')   ws[ref].s = { font:{bold:true,sz:16,color:{rgb:'1565A8'}}, alignment:{horizontal:'left',wrapText:true} };
-        else if (st==='section') ws[ref].s = { font:{bold:true,sz:11,color:{rgb:'1E3A5F'}}, fill:{fgColor:{rgb:'DBEAFE'}}, alignment:{horizontal:'left'} };
-        else if (st==='nonfusicHdr') ws[ref].s = { font:{bold:true,sz:11,color:{rgb:'1E3A5F'}}, fill:{fgColor:{rgb:'DBEAFE'}}, alignment:{horizontal:'left',wrapText:true} };
-        else if (st==='nonfusicIntro') ws[ref].s = { font:{bold:true,sz:10}, alignment:{horizontal:'left',wrapText:true} };
-        else if (st==='nonfusicBullet') ws[ref].s = { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
-        else if (st==='reportDisclaimer') ws[ref].s = { font:{italic:true,sz:9,color:{rgb:'666666'}}, alignment:{horizontal:'left',wrapText:true} };
-        else if (st==='subhdr') ws[ref].s = { font:{bold:true,sz:10,color:{rgb:'1E3A5F'}}, fill:{fgColor:{rgb:'F3F4F6'}}, alignment:{horizontal:'left',wrapText:true} };
-        else if (st==='meta')   ws[ref].s = ci===0 ? { font:{bold:true,sz:10,color:{rgb:'3D5170'}}, alignment:{horizontal:'right'} } : { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
-        else if (st==='row')    ws[ref].s = ci===0 ? { font:{bold:true,sz:10}, alignment:{horizontal:'right'} } : { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
-      }
-    });
-  } catch(e) { /* silently skip */ }
+  const hdrBorder = { top:{style:'thin',color:{rgb:'FFCCCCCC'}}, bottom:{style:'thin',color:{rgb:'FFCCCCCC'}}, left:{style:'thin',color:{rgb:'FFCCCCCC'}}, right:{style:'thin',color:{rgb:'FFCCCCCC'}} };
+
+  // Row 1 title styling — fill every column so the background extends across the sheet width
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 0, c });
+    if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+    ws[ref].s = {
+      font: { bold: true, sz: 24, color: { rgb: 'FFFFFFFF' } },
+      fill: { patternType: 'solid', fgColor: { rgb: 'FF3D5585' } },
+      alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+      border: hdrBorder
+    };
+  }
+
+  // All other row styles
+  wsData.forEach((rowArr, ri) => {
+    if (ri === 0) return; // already styled above
+    const st = rStyle[ri];
+    const maxCi = Math.max(1, (rowArr && rowArr.length) ? rowArr.length - 1 : 1);
+    for (let ci = 0; ci <= maxCi; ci++) {
+      const ref = XLSX.utils.encode_cell({ r: ri, c: ci });
+      if (!ws[ref]) continue;
+      try {
+        if (st==='section')          ws[ref].s = { font:{bold:true,sz:11,color:{rgb:'FF1E3A5F'}}, fill:{patternType:'solid',fgColor:{rgb:'FFDBEAFE'}}, alignment:{horizontal:'left'}, border:hdrBorder };
+        else if (st==='nonfusicHdr') ws[ref].s = { font:{bold:true,sz:11,color:{rgb:'FF1E3A5F'}}, fill:{patternType:'solid',fgColor:{rgb:'FFDBEAFE'}}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='nonfusicIntro')    ws[ref].s = { font:{bold:true,sz:10}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='nonfusicBullet')   ws[ref].s = { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='reportDisclaimer') ws[ref].s = { font:{italic:true,sz:9,color:{rgb:'FF666666'}}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='subhdr') ws[ref].s = { font:{bold:true,sz:10,color:{rgb:'FF1E3A5F'}}, fill:{patternType:'solid',fgColor:{rgb:'FFF3F4F6'}}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='meta')     ws[ref].s = ci===0 ? { font:{bold:true,sz:10,color:{rgb:'FF3D5170'}}, alignment:{horizontal:'right'} } : { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='row')      ws[ref].s = ci===0 ? { font:{bold:true,sz:10}, fill:{patternType:'solid',fgColor:{rgb:'FFFAFAFA'}}, alignment:{horizontal:'right'} } : { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='fusicRow')   ws[ref].s = ci===0 ? { font:{sz:10}, alignment:{horizontal:'left'} } : { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
+        else if (st==='summaryRow') ws[ref].s = ci===0 ? { font:{bold:true,sz:10}, fill:{patternType:'solid',fgColor:{rgb:'FFFAFAFA'}}, alignment:{horizontal:'left'} } : { font:{sz:10}, alignment:{horizontal:'left',wrapText:true} };
+      } catch(e) { console.error('xlsx style error at', ref, e); }
+    }
+  });
+
+  // Right border on every column C cell
+  for (let ri = 0; ri < wsData.length; ri++) {
+    const ref = XLSX.utils.encode_cell({ r: ri, c: 2 });
+    if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+    ws[ref].s = Object.assign({}, ws[ref].s || {}, { border: Object.assign({}, (ws[ref].s || {}).border || {}, { right: { style: 'thin', color: { rgb: 'FFCCCCCC' } } }) });
+  }
 
   XLSX.utils.book_append_sheet(wb, ws, 'FUSIC HD Report');
   try {
-    XLSX.writeFile(wb, `FUSIC_HD_Report_${nd}_${nt}.xlsx`, { bookType:'xlsx', cellStyles:true });
+    XLSX.writeFile(wb, `FUSIC_HD_Report_${nd}_${nt}.xlsx`, { bookType: 'xlsx' });
     showToast(valid ? '✓ Report exported successfully' : '⚠ Exported with incomplete fields', valid ? 'success' : 'warn');
   } catch(err) {
     showToast('Export failed — please try again');
     console.error(err);
   }
+}
+
+// ─── WINDOW VIEW ───────────────────────────────────────
+
+const WV_EXTRA_CHIP_CONTAINERS = {
+  lvotoChips: [], phtBasicChips: [], phtAdvChips: [],
+  tamponadeChips: [], leftLungPEQualChips: [], rightLungPEQualChips: [],
+};
+
+const WV_WINDOWS = [
+  { id:'wv-demographics', title:'Patient demographics', demoSection: true },
+  { id:'wv-plax', title:'PLAX',
+    fields:[
+      {id:'f-ivsd',label:'IVSd'},{id:'f-lvidd',label:'LVIDd'},{id:'f-lvpwd',label:'LVPWd'},{id:'f-lvids',label:'LVIDs'},
+      {id:'f-visualLvSize',label:'Visual LV size'},{id:'f-ef',label:'Visual EF'},
+      {id:'f-lvotDiam',label:'LVOT Diameter'},
+      {id:'f-laVisual',label:'Visual assessment'},{id:'f-laDiamSys',label:'LA diameter (end systole)'},
+      {heading:'Valves'},
+      {id:'f-mvSten',label:'MV opening'},{id:'f-avSten',label:'AV opening'},
+      {id:'f-mvApp',label:'MV appearance'},{id:'f-avApp',label:'AV appearance'},
+      {id:'f-mvReg',label:'MV regurgitation'},{id:'f-avReg',label:'AV regurgitation'},
+      {chips:'lvotoChips',label:'LVOTO / SAM'},
+      {heading:'Aortic Root'},
+      {id:'f-aortaRootDiam',label:'Ao root'},{id:'f-aortaRootFlap',label:'Ao root flap'},{id:'f-aortaRootFlow',label:'Ao root flow'},
+      {id:'f-rwma',label:'Regional Wall Motion Abnormality'},{rwmaBtn:true},{id:'f-rwmaDesc',label:'RWMA Description'},
+    ],
+    subpanels:[
+      { title:'Modified PLAX', fields:[
+        {id:'f-aortaAscDiam',label:'Ao ascending'},{id:'f-aortaAscFlap',label:'Ao asc. flap'},{id:'f-aortaAscFlow',label:'Ao asc. flow'},
+      ]},
+      { title:'RV Inflow', fields:[
+        {id:'f-rvVisualSize',label:'RV size visual estimation'},{id:'f-rvVisLongitudinal',label:'Visual longitudinal systolic function'},{id:'f-rvVisRadial',label:'Visual radial systolic function'},
+        {heading:'Tricuspid Valve'},
+        {id:'f-tvSten',label:'TV opening'},{id:'f-tvApp',label:'TV appearance'},{id:'f-tvReg',label:'TV regurgitation'},
+        {id:'f-trVmax',label:'TR Vmax'},
+      ]},
+      { title:'RV Outflow', fields:[
+        {id:'f-rvotProx',label:'RVOT proximal'},{id:'f-rvotVTI-measure',label:'RVOT VTI'},
+        {id:'f-pvSten',label:'PV opening'},{id:'f-pvApp',label:'PV appearance'},{id:'f-pvReg',label:'PV regurgitation'},
+        {chips:'phtBasicChips',label:'Basic features of PHT'},
+        {heading:'Advanced features of PHT'},
+        {id:'f-phtRvotAccTime',label:'RVOT Acc. Time'},{id:'f-phtEarlyDiastolicPrVel',label:'Early diastolic PR velocity'},
+        {id:'f-phtPaDiameter',label:'PA diameter'},{chips:'phtAdvChips',label:'Systolic notching of RVOT Doppler'},
+      ]},
+    ]
+  },
+  { id:'wv-psax', title:'PSAX',
+    subpanels:[
+      { title:'AV Level', fields:[
+        {id:'f-atrialSeptalDev',label:'Atrial septal deviation throughout the cardiac cycle'},{id:'f-rvotProx',label:'RVOT proximal'},
+        {heading:'Valves'},
+        {id:'f-tvSten',label:'TV opening'},{id:'f-avSten',label:'AV opening'},
+        {id:'f-tvApp',label:'TV appearance'},{id:'f-avApp',label:'AV appearance'},
+        {id:'f-tvReg',label:'TV regurgitation'},{id:'f-avReg',label:'AV regurgitation'},
+        {id:'f-trVmax',label:'TR Vmax'},{id:'f-pvSten',label:'PV opening'},
+        {id:'f-pvApp',label:'PV appearance'},{id:'f-pvReg',label:'PV regurgitation'},
+        {chips:'phtBasicChips',label:'Basic features of PHT'},
+        {heading:'Advanced features of PHT'},
+        {id:'f-phtRvotAccTime',label:'RVOT Acc. Time'},{id:'f-phtEarlyDiastolicPrVel',label:'Early diastolic PR velocity'},
+        {id:'f-phtPaDiameter',label:'PA diameter'},{chips:'phtAdvChips',label:'Systolic notching of RVOT Doppler'},
+      ]},
+      { title:'MV Level', fields:[
+        {id:'f-mvSten',label:'MV opening'},{id:'f-mvApp',label:'MV appearance'},{id:'f-mvReg',label:'MV regurgitation'},
+        {id:'f-rwma',label:'Regional Wall Motion Abnormality'},{rwmaBtn:true},{id:'f-rwmaDesc',label:'RWMA Description'},
+      ]},
+      { title:'Papillary Level', fields:[
+        {id:'f-visualLvSize',label:'Visual LV size'},{id:'f-ef',label:'Visual EF'},
+        {id:'f-rvVisualSize',label:'RV size visual estimation'},
+        {chips:'phtBasicChips',label:'Basic features of PHT'},
+        {id:'f-rwma',label:'Regional Wall Motion Abnormality'},{rwmaBtn:true},{id:'f-rwmaDesc',label:'RWMA Description'},
+      ]},
+    ]
+  },
+  { id:'wv-a4c', title:'A4C',
+    fields:[
+      {heading:'Left Heart'},
+      {id:'f-laVisual',label:'Visual assessment'},{id:'f-laArea',label:'LA area'},
+      {id:'f-visualLvSize',label:'Visual LV size'},{id:'f-ef',label:'Visual EF'},{id:'f-efSimpsonBiplane',label:"EF (Simpson's biplane)"},
+      {id:'f-mapse',label:'MAPSE'},{id:'f-lvSPrime',label:"LV S'"},
+      {id:'f-eWave',label:'E wave velocity'},{id:'f-aWave',label:'A wave velocity'},
+      {id:'f-eSeptal',label:"e' Septal"},{id:'f-eLateral',label:"e' Lateral"},
+      {id:'f-mvSten',label:'MV opening'},{id:'f-mvApp',label:'MV appearance'},{id:'f-mvReg',label:'MV regurgitation'},
+      {id:'f-rwma',label:'Regional Wall Motion Abnormality'},{rwmaBtn:true},{id:'f-rwmaDesc',label:'RWMA Description'},
+      {heading:'Right Heart'},
+      {id:'f-raVisualImpression',label:'RA visual impression'},{id:'f-raArea',label:'RA Area'},
+      {id:'f-rvBasalDiam',label:'RV basal diameter'},{id:'f-rvMidDiam',label:'RV mid diameter'},{id:'f-rvLongDiam',label:'RV longitudinal diameter'},
+      {id:'f-rvEDA',label:'RV end-diastolic area'},{id:'f-rvESA',label:'RV end-systolic area'},
+      {id:'f-rvVisualSize',label:'RV size visual estimation'},{id:'f-rvVisLongitudinal',label:'Visual longitudinal systolic function'},{id:'f-rvVisRadial',label:'Visual radial systolic function'},
+      {id:'f-rvS',label:"RV S′"},{id:'f-tapse',label:'TAPSE'},
+      {id:'f-tvSten',label:'TV opening'},{id:'f-tvApp',label:'TV appearance'},{id:'f-tvReg',label:'TV regurgitation'},
+      {id:'f-trVmax',label:'TR Vmax'},
+    ]
+  },
+  { id:'wv-a5c', title:'A5C',
+    fields:[
+      {id:'f-visualLvSize',label:'Visual LV size'},{id:'f-ef',label:'Visual EF'},
+      {id:'f-avSten',label:'AV opening'},{id:'f-avApp',label:'AV appearance'},{id:'f-avReg',label:'AV regurgitation'},
+      {id:'f-avVTI',label:'AV VTI'},{id:'f-avVMax',label:'AV VMax'},
+      {id:'f-lvotVTI',label:'LVOT VTI'},{id:'f-lvotVMax',label:'LVOT VMax'},
+      {id:'f-vtiDeltaResp',label:'VTI % △ respiration'},
+      {id:'f-vtiDeltaIntervention',label:'VTI % △ intervention'},
+      {id:'vti-int-plr',label:'PLR'},{id:'vti-int-fluids',label:'Fluids'},
+      {id:'vti-int-pressor',label:'Pressor'},{id:'vti-int-inotropes',label:'Inotropes'},
+      {id:'f-vtiInterventionDetails',label:'Intervention details'},
+      {chips:'lvotoChips',label:'LVOTO / SAM'},
+      {id:'f-rwma',label:'Regional Wall Motion Abnormality'},{rwmaBtn:true},{id:'f-rwmaDesc',label:'RWMA Description'},
+    ]
+  },
+  { id:'wv-a3c', title:'A3C',
+    fields:[
+      {id:'f-visualLvSize',label:'Visual LV size'},{id:'f-ef',label:'Visual EF'},
+      {heading:'Valves'},
+      {id:'f-mvSten',label:'MV opening'},{id:'f-avSten',label:'AV opening'},
+      {id:'f-mvApp',label:'MV appearance'},{id:'f-avApp',label:'AV appearance'},
+      {id:'f-mvReg',label:'MV regurgitation'},{id:'f-avReg',label:'AV regurgitation'},
+      {id:'f-lvotVTI',label:'LVOT VTI'},{id:'f-lvotVMax',label:'LVOT VMax'},{id:'f-lvotDiam',label:'LVOT Diameter'},
+      {chips:'lvotoChips',label:'LVOTO / SAM'},
+      {id:'f-rwma',label:'Regional Wall Motion Abnormality'},{rwmaBtn:true},{id:'f-rwmaDesc',label:'RWMA Description'},
+    ]
+  },
+  { id:'wv-a2c', title:'A2C',
+    fields:[
+      {id:'f-visualLvSize',label:'Visual LV size'},{id:'f-ef',label:'Visual EF'},{id:'f-efSimpsonBiplane',label:"EF (Simpson's biplane)"},
+      {id:'f-mvSten',label:'MV opening'},{id:'f-mvApp',label:'MV appearance'},{id:'f-mvReg',label:'MV regurgitation'},
+      {id:'f-rwma',label:'Regional Wall Motion Abnormality'},{rwmaBtn:true},{id:'f-rwmaDesc',label:'RWMA Description'},
+    ]
+  },
+  { id:'wv-subcostal', title:'Subcostal / IVC',
+    fields:[
+      {id:'f-rvWallThick',label:'RV wall thickness'},
+      {id:'f-ivcDiam',label:'IVC Diameter'},{id:'f-ivcCollapse',label:'IVC Collapsibility'},
+      {id:'f-hepaticVein',label:'Hepatic Vein'},{id:'f-portalVein',label:'Portal Vein Pulsatility'},{id:'f-renalVein',label:'Renal Interlobar Vein'},
+      {id:'f-rriPSV',label:'Renal PSV'},{id:'f-rriEDV',label:'Renal EDV'},
+    ]
+  },
+  { id:'wv-pericardium', title:'Pericardium', periSection: true },
+  { id:'wv-rwma', title:'RWMA',
+    fields:[
+      {id:'f-rwma',label:'Regional Wall Motion Abnormality'},{rwmaBtn:true},{id:'f-rwmaDesc',label:'RWMA Description'},
+    ]
+  },
+  { id:'wv-aorta', title:'Aorta',
+    fields:[
+      {id:'f-aortaArchDiam',label:'Arch'},{id:'f-aortaArchFlap',label:'Arch flap'},{id:'f-aortaArchFlow',label:'Arch flow'},
+      {id:'f-aortaDescDiam',label:'Desc.'},{id:'f-aortaDescFlap',label:'Desc. flap'},{id:'f-aortaDescFlow',label:'Desc. flow'},
+      {id:'f-aortaAbdDiam',label:'Abd.'},{id:'f-aortaAbdFlap',label:'Abd. flap'},{id:'f-aortaAbdFlow',label:'Abd. flow'},
+      {id:'f-aortaAbdProxDiam',label:'Abd. prox.'},{id:'f-aortaAbdProxFlap',label:'Abd. prox. flap'},{id:'f-aortaAbdProxFlow',label:'Abd. prox. flow'},
+      {id:'f-aortaAbdMidDiam',label:'Abd. mid'},{id:'f-aortaAbdMidFlap',label:'Abd. mid flap'},{id:'f-aortaAbdMidFlow',label:'Abd. mid flow'},
+      {id:'f-aortaAbdDistDiam',label:'Abd. dist.'},{id:'f-aortaAbdDistFlap',label:'Abd. dist. flap'},{id:'f-aortaAbdDistFlow',label:'Abd. dist. flow'},
+      {id:'f-aortaRIliacDiam',label:'R. iliac'},{id:'f-aortaRIliacFlap',label:'R. iliac flap'},{id:'f-aortaRIliacFlow',label:'R. iliac flow'},
+      {id:'f-aortaLIliacDiam',label:'L. iliac'},{id:'f-aortaLIliacFlap',label:'L. iliac flap'},{id:'f-aortaLIliacFlow',label:'L. iliac flow'},
+    ]
+  },
+  { id:'wv-lungs', title:'Lungs', lungSection:true,
+    fields:[{id:'f-bLinesLung',label:'B-lines on lung ultrasound'}]
+  },
+  { id:'wv-haemo', title:'Haemodynamics',
+    fields:[
+      {id:'f-lvotDiam',label:'LVOT Diameter'},{id:'f-lvotVTI',label:'LVOT VTI'},
+      {id:'f-vtiDeltaResp',label:'VTI % △ respiration'},
+      {id:'f-vtiDeltaIntervention',label:'VTI % △ intervention'},
+      {id:'vti-int-plr',label:'PLR'},{id:'vti-int-fluids',label:'Fluids'},
+      {id:'vti-int-pressor',label:'Pressor'},{id:'vti-int-inotropes',label:'Inotropes'},
+      {id:'f-vtiInterventionDetails',label:'Intervention details'},
+    ]
+  },
+];
+
+let _wvActive = false;
+let _wvSyncing = false;
+let _wvLungBodyParent = null;
+let _wvScanInfoBodyParent = null;
+let _wvDemographicsBodyParent = null;
+let _wvPericardiumBodyParent = null;
+
+function toggleWindowView() {
+  _wvActive = !_wvActive;
+  document.getElementById('windowViewBtn')?.setAttribute('aria-pressed', String(_wvActive));
+  document.getElementById('windowViewBtn')?.classList.toggle('wv-btn-active', _wvActive);
+  document.getElementById('mainContent')?.classList.toggle('wv-hidden', _wvActive);
+  const secNavBtn = document.getElementById('secNavBtn');
+  const secNavBtnLabel = document.getElementById('secNavBtnLabel');
+  if (secNavBtn) {
+    const label = _wvActive ? 'Go to view' : 'Go to section';
+    secNavBtn.setAttribute('aria-label', label);
+    secNavBtn.setAttribute('title', label);
+    if (_wvActive) {
+      secNavBtn.style.minWidth = secNavBtn.getBoundingClientRect().width + 'px';
+    } else {
+      secNavBtn.style.minWidth = '';
+    }
+  }
+  if (secNavBtnLabel) secNavBtnLabel.textContent = _wvActive ? 'Views' : 'Sections';
+  const wv = document.getElementById('windowView');
+  if (_wvActive) {
+    wvRender();
+    wvRefreshAllProxies();
+    wvUpdateRwmaBtn();
+    wv?.classList.add('wv-visible');
+  } else {
+    wvTeardown();
+    wv?.classList.remove('wv-visible');
+    if (wv) wv.innerHTML = '';
+  }
+}
+
+function wvRender() {
+  const wv = document.getElementById('windowView');
+  if (!wv) return;
+  wv.innerHTML = '';
+  Object.keys(WV_EXTRA_CHIP_CONTAINERS).forEach(k => { WV_EXTRA_CHIP_CONTAINERS[k] = []; });
+
+  const wvHeader = document.createElement('div');
+  wvHeader.className = 'wv-page-header';
+  const wvHeaderTitle = document.createElement('span');
+  wvHeaderTitle.className = 'scan-info-header-title';
+  wvHeaderTitle.textContent = 'Scan information – Workflow View';
+  wvHeader.appendChild(wvHeaderTitle);
+  const wvCollapseBtn = document.createElement('button');
+  wvCollapseBtn.type = 'button';
+  wvCollapseBtn.className = 'scan-info-collapse-all-btn';
+  wvCollapseBtn.id = 'wvCollapseAllBtn';
+  wvCollapseBtn.setAttribute('aria-label', 'Collapse all workflow panels');
+  wvCollapseBtn.title = 'Collapse all panels';
+  wvCollapseBtn.innerHTML = '<svg class="scan-info-icon-collapse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg><svg class="scan-info-icon-expand" hidden xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+  wvCollapseBtn.addEventListener('click', wvToggleAllPanels);
+  wvHeader.appendChild(wvCollapseBtn);
+  wv.appendChild(wvHeader);
+  wvMountScanInfoSection(wv);
+
+  WV_WINDOWS.forEach((win, winIndex) => {
+    const panel = document.createElement('div');
+    panel.className = 'wv-panel';
+    panel.id = win.id;
+    const titleEl = document.createElement('div');
+    titleEl.className = 'wv-panel-title';
+    const titleInner = document.createElement('div');
+    titleInner.className = 'wv-title-inner';
+    const iconEl = document.createElement('span');
+    iconEl.className = 'wv-panel-icon';
+    iconEl.textContent = String(winIndex + 1);
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = win.title;
+    titleInner.appendChild(iconEl);
+    titleInner.appendChild(titleSpan);
+    titleEl.appendChild(titleInner);
+    const chevron = document.createElement('span');
+    chevron.className = 'wv-chevron';
+    chevron.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+    titleEl.appendChild(chevron);
+    titleEl.addEventListener('click', () => panel.classList.toggle('wv-panel-collapsed'));
+    panel.appendChild(titleEl);
+
+    if (win.fields && win.fields.length) {
+      const body = document.createElement('div');
+      body.className = 'wv-panel-body';
+      wvRenderFields(win.fields, body, win.id);
+      panel.appendChild(body);
+    }
+    if (win.lungSection) wvMountLungSection(panel);
+    if (win.demoSection) wvMountDemographicsSection(panel);
+    if (win.periSection) wvMountPericardiumSection(panel);
+    if (win.subpanels) {
+      win.subpanels.forEach(sub => {
+        const subDiv = document.createElement('div');
+        subDiv.className = 'wv-subpanel';
+        const subTitle = document.createElement('div');
+        subTitle.className = 'wv-subpanel-title';
+        subTitle.textContent = sub.title;
+        subDiv.appendChild(subTitle);
+        const subBody = document.createElement('div');
+        subBody.className = 'wv-panel-body';
+        const subKey = win.id + '-' + sub.title.toLowerCase().replace(/\s+/g,'-');
+        wvRenderFields(sub.fields, subBody, subKey);
+        subDiv.appendChild(subBody);
+        panel.appendChild(subDiv);
+      });
+    }
+    wv.appendChild(panel);
+  });
+
+  // Rebuild chips so WV containers get populated
+  buildLVOTOChips(); buildPHTBasicChips(); buildPHTAdvancedChips();
+  buildTamponadeChips(); buildLeftLungPEQualChips(); buildRightLungPEQualChips();
+}
+
+function wvRenderFields(fields, container, panelKey) {
+  let cbRow = null;
+  fields.forEach(f => {
+    if (f.id) {
+      const orig = document.getElementById(f.id);
+      if (!orig) return;
+      const isCheckbox = orig.type === 'checkbox';
+      if (isCheckbox) {
+        if (!cbRow) { cbRow = document.createElement('div'); cbRow.className = 'wv-checkbox-row'; container.appendChild(cbRow); }
+        const lbl = document.createElement('label');
+        lbl.className = 'wv-checkbox-item';
+        if (!wvIsMainFieldVisible(f.id)) lbl.classList.add('section-hidden');
+        const proxy = wvCreateProxy(f.id);
+        if (proxy) { lbl.appendChild(proxy); const sp = document.createElement('span'); sp.textContent = f.label; lbl.appendChild(sp); cbRow.appendChild(lbl); }
+      } else {
+        cbRow = null;
+        const wrap = document.createElement('div'); wrap.className = 'wv-field';
+        if (!wvIsMainFieldVisible(f.id)) wrap.classList.add('section-hidden');
+        const lbl = document.createElement('div'); lbl.className = 'wv-label'; lbl.textContent = f.label;
+        wrap.appendChild(lbl);
+        const proxy = wvCreateProxy(f.id);
+        if (proxy) wrap.appendChild(proxy);
+        container.appendChild(wrap);
+      }
+    } else if (f.chips) {
+      cbRow = null;
+      const wrap = document.createElement('div'); wrap.className = 'wv-field';
+      const lbl = document.createElement('div'); lbl.className = 'wv-label'; lbl.textContent = f.label;
+      wrap.appendChild(lbl);
+      const chipsDiv = document.createElement('div');
+      const chipsId = panelKey + '-' + f.chips;
+      chipsDiv.id = chipsId; chipsDiv.className = 'rhythm-chips';
+      wrap.appendChild(chipsDiv);
+      container.appendChild(wrap);
+      if (WV_EXTRA_CHIP_CONTAINERS[f.chips]) WV_EXTRA_CHIP_CONTAINERS[f.chips].push(chipsId);
+    } else if (f.heading) {
+      cbRow = null;
+      const hdg = document.createElement('div');
+      hdg.className = 'rv-subheading';
+      hdg.textContent = f.heading;
+      container.appendChild(hdg);
+    } else if (f.rwmaBtn) {
+      cbRow = null;
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'btn-rwma-segment wv-rwma-btn';
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>17-Segment Model';
+      btn.onclick = openRwmaModal;
+      container.appendChild(btn);
+      wvUpdateRwmaBtn();
+    }
+  });
+}
+
+function wvCreateProxy(fieldId) {
+  const orig = document.getElementById(fieldId);
+  if (!orig) return null;
+  const proxy = orig.cloneNode(true);
+  proxy.removeAttribute('id');
+  proxy.setAttribute('data-proxy-for', fieldId);
+  ['oninput','onchange','onclick','onfocus','onblur'].forEach(a => proxy.removeAttribute(a));
+  if (orig.type === 'checkbox') {
+    proxy.checked = orig.checked;
+    proxy.addEventListener('change', wvProxyChanged);
+  } else {
+    proxy.value = orig.value;
+    proxy.addEventListener('input', wvProxyChanged);
+    proxy.addEventListener('change', wvProxyChanged);
+  }
+  return proxy;
+}
+
+function wvProxyChanged(e) {
+  if (_wvSyncing) return;
+  _wvSyncing = true;
+  const fieldId = e.target.getAttribute('data-proxy-for');
+  const orig = document.getElementById(fieldId);
+  if (orig) {
+    if (e.target.type === 'checkbox') {
+      orig.checked = e.target.checked;
+      orig.dispatchEvent(new Event('change', {bubbles: true}));
+    } else {
+      orig.value = e.target.value;
+      orig.dispatchEvent(new Event('input', {bubbles: true}));
+      orig.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+  }
+  if (fieldId === 'f-rwma') wvUpdateRwmaBtn();
+  wvRefreshAllProxies();
+  _wvSyncing = false;
+}
+
+function wvIsMainFieldVisible(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (!el) return false;
+  let node = el.parentElement;
+  while (node) {
+    if (node.id === 'mainContent') return true;
+    if (node.classList.contains('section-hidden')) return false;
+    if (node.classList.contains('conditional-field') && !node.classList.contains('visible')) return false;
+    node = node.parentElement;
+  }
+  return true;
+}
+
+function wvRefreshFieldVisibility() {
+  if (!_wvActive) return;
+  document.querySelectorAll('#windowView .wv-field').forEach(wrap => {
+    const proxy = wrap.querySelector('[data-proxy-for]');
+    if (!proxy) return;
+    wrap.classList.toggle('section-hidden', !wvIsMainFieldVisible(proxy.getAttribute('data-proxy-for')));
+  });
+  document.querySelectorAll('#windowView .wv-checkbox-item').forEach(item => {
+    const proxy = item.querySelector('[data-proxy-for]');
+    if (!proxy) return;
+    item.classList.toggle('section-hidden', !wvIsMainFieldVisible(proxy.getAttribute('data-proxy-for')));
+  });
+}
+
+function wvRefreshAllProxies() {
+  document.querySelectorAll('[data-proxy-for]').forEach(proxy => {
+    if (proxy === document.activeElement) return;
+    const orig = document.getElementById(proxy.getAttribute('data-proxy-for'));
+    if (!orig) return;
+    if (proxy.type === 'checkbox') { proxy.checked = orig.checked; }
+    else { proxy.value = orig.value; }
+  });
+}
+
+function wvUpdateRwmaBtn() {
+  const show = document.getElementById('f-rwma')?.value === 'Present';
+  document.querySelectorAll('#windowView .wv-rwma-btn').forEach(btn => btn.style.display = show ? '' : 'none');
+}
+
+function wvMountLungSection(panel) {
+  const lungBody = document.querySelector('#sec-pleural .section-body');
+  if (!lungBody) return;
+  _wvLungBodyParent = lungBody.parentElement;
+  const mount = document.createElement('div');
+  mount.id = 'wv-lung-mount'; mount.className = 'wv-panel-body';
+  mount.appendChild(lungBody);
+  panel.appendChild(mount);
+}
+
+function wvMountScanInfoSection(wv) {
+  const body = document.querySelector('#scanInfoCard .scan-info-body');
+  if (!body) return;
+  _wvScanInfoBodyParent = body.parentElement;
+  const panel = document.createElement('div');
+  panel.className = 'wv-panel';
+  panel.id = 'wv-scan-info';
+  const mount = document.createElement('div');
+  mount.id = 'wv-scan-info-mount';
+  mount.className = 'wv-panel-body';
+  mount.appendChild(body);
+  panel.appendChild(mount);
+  wv.appendChild(panel);
+}
+
+function wvMountPericardiumSection(panel) {
+  const body = document.querySelector('#sec-pericardial .section-body');
+  if (!body) return;
+  _wvPericardiumBodyParent = body.parentElement;
+  const mount = document.createElement('div');
+  mount.id = 'wv-pericardium-mount';
+  mount.className = 'wv-panel-body';
+  mount.appendChild(body);
+  panel.appendChild(mount);
+}
+
+function wvMountDemographicsSection(panel) {
+  const body = document.querySelector('#sec-demographics .section-body');
+  if (!body) return;
+  _wvDemographicsBodyParent = body.parentElement;
+  const mount = document.createElement('div');
+  mount.id = 'wv-demographics-mount';
+  mount.className = 'wv-panel-body';
+  mount.appendChild(body);
+  panel.appendChild(mount);
+}
+
+function wvToggleAllPanels() {
+  const panels = [...document.querySelectorAll('#windowView .wv-panel')];
+  const allCollapsed = panels.every(p => p.classList.contains('wv-panel-collapsed'));
+  panels.forEach(p => p.classList.toggle('wv-panel-collapsed', !allCollapsed));
+  wvUpdateCollapseAllBtn();
+}
+
+function wvUpdateCollapseAllBtn() {
+  const btn = document.getElementById('wvCollapseAllBtn');
+  if (!btn) return;
+  const panels = [...document.querySelectorAll('#windowView .wv-panel')];
+  const allCollapsed = panels.every(p => p.classList.contains('wv-panel-collapsed'));
+  btn.setAttribute('aria-label', allCollapsed ? 'Expand all workflow panels' : 'Collapse all workflow panels');
+  btn.title = allCollapsed ? 'Expand all panels' : 'Collapse all panels';
+  btn.querySelector('.scan-info-icon-expand')?.toggleAttribute('hidden', !allCollapsed);
+  btn.querySelector('.scan-info-icon-collapse')?.toggleAttribute('hidden', allCollapsed);
+}
+
+function wvTeardown() {
+  if (_wvScanInfoBodyParent) {
+    const body = document.getElementById('wv-scan-info-mount')?.querySelector('.scan-info-body');
+    if (body) _wvScanInfoBodyParent.appendChild(body);
+    _wvScanInfoBodyParent = null;
+  }
+  if (_wvDemographicsBodyParent) {
+    const body = document.getElementById('wv-demographics-mount')?.querySelector('.section-body');
+    if (body) _wvDemographicsBodyParent.appendChild(body);
+    _wvDemographicsBodyParent = null;
+  }
+  if (_wvPericardiumBodyParent) {
+    const body = document.getElementById('wv-pericardium-mount')?.querySelector('.section-body');
+    if (body) _wvPericardiumBodyParent.appendChild(body);
+    _wvPericardiumBodyParent = null;
+  }
+  if (_wvLungBodyParent) {
+    const lungBody = document.getElementById('wv-lung-mount')?.querySelector('.section-body');
+    if (lungBody) _wvLungBodyParent.appendChild(lungBody);
+    _wvLungBodyParent = null;
+  }
+  Object.keys(WV_EXTRA_CHIP_CONTAINERS).forEach(k => { WV_EXTRA_CHIP_CONTAINERS[k] = []; });
 }
 </script>
 <script>
