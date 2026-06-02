@@ -156,11 +156,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
   .header-dev-stamp { display: none; }
 }
 .header-actions { display: flex; align-items: center; gap: 2px; }
-#refRangesBtn, #aboutBtn, #settingsBtn, #windowViewBtn { background: none; border: none; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-muted); transition: background 0.2s, color 0.2s; }
-#refRangesBtn:hover, #aboutBtn:hover, #settingsBtn:hover, #windowViewBtn:hover { background: var(--primary-xlight); color: var(--primary); }
-#refRangesBtn svg, #aboutBtn svg, #settingsBtn svg, #windowViewBtn svg { width: 22px; height: 22px; flex-shrink: 0; }
+#refRangesBtn, #aboutBtn, #settingsBtn { background: none; border: none; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--text-muted); transition: background 0.2s, color 0.2s; }
+#refRangesBtn:hover, #aboutBtn:hover, #settingsBtn:hover { background: var(--primary-xlight); color: var(--primary); }
+#refRangesBtn svg, #aboutBtn svg, #settingsBtn svg { width: 22px; height: 22px; flex-shrink: 0; }
 @media (pointer: coarse) {
-  #refRangesBtn, #aboutBtn, #settingsBtn, #windowViewBtn { width: 48px; height: 48px; }
+  #refRangesBtn, #aboutBtn, #settingsBtn { width: 48px; height: 48px; }
   .header-actions { gap: 4px; }
 }
 
@@ -1404,8 +1404,7 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  gap: 8px;
   flex-wrap: wrap;
   padding: 14px 18px;
   background: var(--surface);
@@ -1417,14 +1416,50 @@ body[data-study-pseudo-anonymised="1"] .anonymise-pii-reminder { display: block;
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--primary-dark);
+  flex: 1;
+  min-width: 0;
 }
+.pt-settings-wrap { position: relative; flex-shrink: 0; }
+.pt-settings-btn { width: 42px; min-height: 42px; padding: 0; display: flex; align-items: center; justify-content: center; }
+.pt-settings-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+.pt-settings-btn.active { color: var(--primary); background: var(--primary-xlight); border-color: var(--primary-light); }
+.pt-settings-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 264px;
+  max-width: calc(100vw - 32px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  z-index: 500;
+  padding: 6px 0;
+}
+.pt-settings-dropdown.open { display: block; }
+.pt-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 16px;
+}
+.pt-settings-label { font-size: 13.5px; font-weight: 500; color: var(--text); line-height: 1.35; flex: 1; }
+.pt-settings-divider { height: 1px; background: var(--border); margin: 4px 0; }
 .plain-text-report-toolbar-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
   align-items: center;
+  flex-shrink: 0;
 }
 .plain-text-report-toolbar-actions .btn { min-height: 42px; }
+@media (max-width: 540px) {
+  .plain-text-report-toolbar-actions { width: 100%; }
+  .plain-text-report-toolbar-actions .btn { flex: 1; min-width: 0; padding-left: 12px; padding-right: 12px; }
+  #plainTextReportCloseBtn { flex: 0 0 auto; padding-left: 14px; padding-right: 14px; }
+}
 .plain-text-report-instructions {
   max-width: min(72ch, 100%);
   margin: 0 auto 18px;
@@ -3374,9 +3409,9 @@ html[data-theme="dark"] .settings-clear-btn:hover { background: #3f1f1f; }
 }
 .wv-checkbox-item input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--primary); }
 .wv-rwma-btn { width: 100%; margin-bottom: 5px; }
-#windowViewBtn.wv-btn-active { color: var(--primary); background: var(--primary-xlight); border-radius: 50%; }
+#workflowBtn.wv-btn-active { color: var(--primary); border-color: var(--primary); background: var(--primary-xlight); }
 html[data-theme="dark"] .wv-panel-title { background: var(--primary); }
-html[data-theme="dark"] #windowViewBtn.wv-btn-active { background: var(--primary-xlight); }
+html[data-theme="dark"] #workflowBtn.wv-btn-active { background: var(--primary-xlight); }
 html[data-theme="dark"] .wv-field select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a8b8cc' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
 }
@@ -3511,9 +3546,6 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
     <span class="header-title">FUSIC HD <span>Report Generator</span></span>
   </div>
   <div class="header-actions">
-    <button type="button" id="windowViewBtn" title="Window-based data entry" aria-label="Toggle window view" aria-pressed="false" onclick="toggleWindowView()">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>
-    </button>
     <button type="button" id="refRangesBtn" title="Reference ranges" aria-label="Open reference ranges">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
     </button>
@@ -5211,9 +5243,13 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
 
 <!-- ══════════ STICKY FOOTER ═══════════════════════════ -->
 <div id="stickyFooter">
-  <button class="btn btn-secondary" id="secNavBtn" aria-label="Go to section" title="Go to section">
+  <button class="btn btn-secondary" id="secNavBtn" aria-label="Navigate" title="Navigate">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
-    <span id="secNavBtnLabel">Sections</span>
+    <span id="secNavBtnLabel">Navigate</span>
+  </button>
+  <button class="btn btn-secondary" id="workflowBtn" aria-label="Toggle workflow view" aria-pressed="false" title="Toggle workflow view" onclick="toggleWindowView()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Workflow
   </button>
   <div class="footer-export-split" id="exportSplitWrap">
     <button type="button" class="btn btn-primary footer-export-primary" id="exportBtn" title="Export report — full descriptions" aria-haspopup="dialog">
@@ -5434,6 +5470,34 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
 <div id="plainTextReportOverlay" aria-hidden="true">
   <div class="plain-text-report-toolbar">
     <h2 id="plainTextReportTitle">Plain text report</h2>
+    <div class="pt-settings-wrap" id="ptSettingsWrap">
+      <button type="button" class="btn btn-secondary pt-settings-btn" id="ptSettingsBtn" aria-label="Report options" title="Report options" aria-haspopup="true" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="pt-settings-dropdown" id="ptSettingsDropdown" role="menu" aria-label="Report options">
+        <div class="pt-settings-row">
+          <span class="pt-settings-label">Omit empty sections</span>
+          <label class="toggle-switch"><input type="checkbox" id="pt-toggle-omit-empty"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="pt-settings-row">
+          <span class="pt-settings-label">Summary near top</span>
+          <label class="toggle-switch"><input type="checkbox" id="pt-toggle-summary-top"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="pt-settings-row">
+          <span class="pt-settings-label">Non-FUSIC HD disclaimer</span>
+          <label class="toggle-switch"><input type="checkbox" id="pt-toggle-nonfusic"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="pt-settings-row">
+          <span class="pt-settings-label">Report disclaimer</span>
+          <label class="toggle-switch"><input type="checkbox" id="pt-toggle-disclaimer"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="pt-settings-divider"></div>
+        <div class="pt-settings-row">
+          <span class="pt-settings-label">Quantitative assessment only</span>
+          <label class="toggle-switch"><input type="checkbox" id="pt-toggle-quant-only"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+      </div>
+    </div>
     <div class="plain-text-report-toolbar-actions">
       <button type="button" class="btn btn-secondary" id="plainTextReportSelectAllBtn">Select all</button>
       <button type="button" class="btn btn-secondary" id="plainTextReportCopyBtn">Copy to clipboard</button>
@@ -12016,11 +12080,81 @@ function triggerExportFromModal(format) {
 
 const EXPORT_DISCLAIMER_TEXT = 'Disclaimer: The above report has been generated by a reporting tool in active development. It is not a final report and must not be entered into any patient record without formal verification, appropriate clinical review, and sign-off where required.';
 
+function filterExportRowsQuantOnly(rows) {
+  const removeLabels = new Set([
+    'Visual LV size', 'Visual EF',
+    'Regional Wall Motion Abnormality', 'RWMA Description',
+    'B-Lines on Lung Ultrasound',
+    'Atrial septal deviation throughout the cardiac cycle',
+    'Visual assessment (LA)',
+    'RA visual impression', 'RV size visual estimation',
+    'Visual longitudinal systolic function', 'Visual radial systolic function',
+    'Basic Features of PHT', 'Advanced Features of PHT',
+    'Opening', 'Appearance', 'Regurgitation',
+    'Features of LVOTO / SAM',
+    'Pericardial Effusion', 'Effusion Location', 'Effusion Appearance',
+    'Signs of Tamponade',
+    'LAP Probability', 'Estimated PH risk (TR Vmax, interpreted)',
+    'Hepatic Vein', 'Portal Vein Pulsatility', 'Renal Interlobar Vein', 'VeXUS Grade',
+  ]);
+  const removeSections = new Set([
+    'PERICARDIUM', 'LUNG', 'FUSIC HD QUESTIONS', 'SUMMARY & CONCLUSIONS',
+  ]);
+
+  const pass1 = [];
+  let inRemovedSection = false;
+
+  for (const r of rows) {
+    if (r.t === 'section') {
+      if (removeSections.has(r.title)) {
+        inRemovedSection = true;
+        if (pass1.length && pass1[pass1.length - 1].t === 'blank') pass1.pop();
+        continue;
+      }
+      inRemovedSection = false;
+    }
+    if (inRemovedSection) continue;
+    if (r.t === 'rwmaDiagram' || r.t === 'summaryConclusionsBlock') continue;
+    if ((r.t === 'row' || r.t === 'wideRow') && removeLabels.has(r.label?.trim())) continue;
+
+    if (r.t === 'aortaTable') {
+      const segs = r.segs.map(s => ({ label: s.label, diam: s.diam })).filter(s => s.diam);
+      if (segs.length) pass1.push({ ...r, segs });
+      continue;
+    }
+
+    if (r.t === 'row' && r.label === 'IVC') {
+      const dNum = parseFloat(getVal('f-ivcDiam'));
+      if (!isNaN(dNum) && dNum > 0) pass1.push({ ...r, value: `${dNum} cm` });
+      continue;
+    }
+
+    pass1.push(r);
+  }
+
+  // Remove valve subheaders left with no content after stripping qualitative rows
+  const pass2 = [];
+  for (let i = 0; i < pass1.length; i++) {
+    if (pass1[i].t === 'subhdr') {
+      let hasContent = false;
+      for (let j = i + 1; j < pass1.length; j++) {
+        const t = pass1[j].t;
+        if (t === 'row' || t === 'wideRow' || t === 'aortaTable') { hasContent = true; break; }
+        if (t === 'subhdr' || t === 'section' || t === 'blank') break;
+      }
+      if (!hasContent) continue;
+    }
+    pass2.push(pass1[i]);
+  }
+
+  pruneOrphanNonFusicDisclaimerExportRows(pass2);
+  return pass2;
+}
+
 function getPlainTextReportFullString() {
-  const rows = getExportRowsOrdered();
-  const body = formatExportRowsAsPlainText(rows);
-  const disclaimer = '\n\n────────────────────────────────────────\n' + EXPORT_DISCLAIMER_TEXT + '\n';
-  return `${body}${disclaimer}`;
+  let rows = getExportRowsOrdered();
+  if (document.getElementById('pt-toggle-quant-only')?.checked) rows = filterExportRowsQuantOnly(rows);
+  return formatExportRowsAsPlainText(rows);
 }
 
 function openPlainTextReportView() {
@@ -12035,6 +12169,8 @@ function openPlainTextReportView() {
   if (instructions) instructions.hidden = true;
   if (pre) pre.textContent = text;
   if (pre) pre.dataset.copyKind = 'report';
+  document.getElementById('ptSettingsWrap')?.removeAttribute('hidden');
+  closePtSettings();
   overlay?.classList.add('open');
   if (overlay) overlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
@@ -12042,6 +12178,7 @@ function openPlainTextReportView() {
 }
 
 function closePlainTextReportView() {
+  closePtSettings();
   const overlay = document.getElementById('plainTextReportOverlay');
   overlay?.classList.remove('open');
   if (overlay) overlay.setAttribute('aria-hidden', 'true');
@@ -12163,6 +12300,7 @@ function openQuickDataInputTextView() {
   const overlay = document.getElementById('plainTextReportOverlay');
   if (titleEl) titleEl.textContent = "Export for TOTEM FUSIC HD Reporting Tool";
   if (instructions) instructions.hidden = false;
+  document.getElementById('ptSettingsWrap')?.setAttribute('hidden', '');
   if (pre) {
     pre.textContent = getQuickDataInputText();
     pre.dataset.copyKind = 'quickData';
@@ -12640,6 +12778,32 @@ function appendAttachedImagesToPrintMount() {
   inner.insertAdjacentHTML('beforeend', html);
 }
 
+const PT_SETTINGS_SYNC = [
+  { ptId: 'pt-toggle-omit-empty',  mainId: 'toggle-omit-empty-export' },
+  { ptId: 'pt-toggle-summary-top', mainId: 'toggle-export-summary-near-top' },
+  { ptId: 'pt-toggle-nonfusic',    mainId: 'toggle-export-nonfusic-disclaimer' },
+  { ptId: 'pt-toggle-disclaimer',  mainId: 'toggle-export-report-disclaimer' },
+];
+
+function openPtSettings() {
+  PT_SETTINGS_SYNC.forEach(({ ptId, mainId }) => {
+    const main = document.getElementById(mainId);
+    const pt = document.getElementById(ptId);
+    if (main && pt) pt.checked = main.checked;
+  });
+  document.getElementById('ptSettingsDropdown')?.classList.add('open');
+  const btn = document.getElementById('ptSettingsBtn');
+  btn?.setAttribute('aria-expanded', 'true');
+  btn?.classList.add('active');
+}
+
+function closePtSettings() {
+  document.getElementById('ptSettingsDropdown')?.classList.remove('open');
+  const btn = document.getElementById('ptSettingsBtn');
+  btn?.setAttribute('aria-expanded', 'false');
+  btn?.classList.remove('active');
+}
+
 function initExportSplitControl() {
   document.getElementById('exportBtn')?.addEventListener('click', openExportModal);
   document.getElementById('exportOpenAnonymiseModal')?.addEventListener('click', openPseudoAnonymiseDialog);
@@ -12652,8 +12816,27 @@ function initExportSplitControl() {
   document.getElementById('plainTextReportSelectAllBtn')?.addEventListener('click', plainTextReportSelectAll);
   document.getElementById('plainTextReportCopyBtn')?.addEventListener('click', () => void plainTextReportCopyFromView());
   document.getElementById('plainTextReportCloseBtn')?.addEventListener('click', closePlainTextReportView);
+  document.getElementById('ptSettingsBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    const dropdown = document.getElementById('ptSettingsDropdown');
+    if (dropdown?.classList.contains('open')) closePtSettings(); else openPtSettings();
+  });
+  PT_SETTINGS_SYNC.forEach(({ ptId, mainId }) => {
+    document.getElementById(ptId)?.addEventListener('change', () => {
+      const pt = document.getElementById(ptId);
+      const main = document.getElementById(mainId);
+      if (main && pt) main.checked = pt.checked;
+      const pre = document.getElementById('plainTextReportBody');
+      if (pre?.dataset?.copyKind === 'report') pre.textContent = getPlainTextReportFullString();
+    });
+  });
+  document.getElementById('pt-toggle-quant-only')?.addEventListener('change', () => {
+    const pre = document.getElementById('plainTextReportBody');
+    if (pre?.dataset?.copyKind === 'report') pre.textContent = getPlainTextReportFullString();
+  });
   document.addEventListener('click', e => {
     if (!e.target.closest('.footer-export-split')) closeExportDropdown();
+    if (!e.target.closest('#ptSettingsWrap')) closePtSettings();
   });
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
@@ -12663,6 +12846,10 @@ function initExportSplitControl() {
     }
     if (document.getElementById('refRangesPanel')?.classList.contains('open')) {
       closeReferenceRanges();
+      return;
+    }
+    if (document.getElementById('ptSettingsDropdown')?.classList.contains('open')) {
+      closePtSettings();
       return;
     }
     const plain = document.getElementById('plainTextReportOverlay');
@@ -13000,10 +13187,10 @@ function buildExportRows() {
       const svri = getSVRICalc();
       if (svri) rowU(isAutoCalcManual(document.getElementById('svri-display-input')) ? 'SVR index — manually entered' : 'SVR index — calculated', svri, 'Wood units·m²');
     }
-    const vtiResp = getVal('f-vtiDeltaResp'); if (vtiResp) rowU('VTI % Δ respiration', vtiResp, '%');
+    const vtiResp = getVal('f-vtiDeltaResp'); if (vtiResp) row('VTI % Δ respiration', vtiResp);
     const vtiInt = getVal('f-vtiDeltaIntervention');
     if (vtiInt) {
-      rowU('VTI % Δ intervention', vtiInt, '%');
+      row('VTI % Δ intervention', vtiInt);
       const vtiTypes = [];
       if (document.getElementById('vti-int-plr')?.checked) vtiTypes.push('PLR');
       if (document.getElementById('vti-int-fluids')?.checked) vtiTypes.push('Fluids');
@@ -13408,9 +13595,18 @@ function formatExportRowsAsPlainText(rows) {
       for (let i = 1; i <= 17; i++) groups[st[i]||0].push(i);
       const mn = RWMA.MNAMES, nm = RWMA.NAMES;
       [1,2,3].forEach(s => { if (groups[s].length) lines.push(`  ${mn[s]}: ${groups[s].map(n => `${n} (${nm[n]})`).join(', ')}`); });
+    } else if (r.t === 'aortaTable') {
+      if (r.abdLabel) lines.push(r.abdLabel);
+      for (const s of r.segs) {
+        const parts = [];
+        if (s.diam) parts.push(`${s.diam} mm`);
+        if (s.flap) parts.push(`Flap: ${s.flap}`);
+        if (s.flow) parts.push(`Flow: ${s.flow}`);
+        if (parts.length) lines.push(`  ${s.label}: ${parts.join(', ')}`);
+      }
     } else if (r.t === 'indicationRow') {
       lines.push(`Indication: ${r.value}`);
-    } else if (r.t === 'row') {
+    } else if (r.t === 'row' || r.t === 'wideRow') {
       const raw = r.label;
       const name = raw.trim();
       const pad = raw.length - raw.trimStart().length;
@@ -14663,22 +14859,9 @@ let _wvPericardiumBodyParent = null;
 
 function toggleWindowView() {
   _wvActive = !_wvActive;
-  document.getElementById('windowViewBtn')?.setAttribute('aria-pressed', String(_wvActive));
-  document.getElementById('windowViewBtn')?.classList.toggle('wv-btn-active', _wvActive);
+  document.getElementById('workflowBtn')?.setAttribute('aria-pressed', String(_wvActive));
+  document.getElementById('workflowBtn')?.classList.toggle('wv-btn-active', _wvActive);
   document.getElementById('mainContent')?.classList.toggle('wv-hidden', _wvActive);
-  const secNavBtn = document.getElementById('secNavBtn');
-  const secNavBtnLabel = document.getElementById('secNavBtnLabel');
-  if (secNavBtn) {
-    const label = _wvActive ? 'Go to view' : 'Go to section';
-    secNavBtn.setAttribute('aria-label', label);
-    secNavBtn.setAttribute('title', label);
-    if (_wvActive) {
-      secNavBtn.style.minWidth = secNavBtn.getBoundingClientRect().width + 'px';
-    } else {
-      secNavBtn.style.minWidth = '';
-    }
-  }
-  if (secNavBtnLabel) secNavBtnLabel.textContent = _wvActive ? 'Views' : 'Sections';
   const wv = document.getElementById('windowView');
   if (_wvActive) {
     wvRender();
