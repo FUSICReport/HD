@@ -627,23 +627,18 @@ html[data-theme="dark"] .edec-meas-block-title { background: #2a4c6e; }
 #overlay.open { opacity: 1; pointer-events: all; }
 #settingsPanel {
   position: fixed;
-  top: 0;
+  top: var(--header-h);
+  left: 0;
   right: 0;
   bottom: 0;
   z-index: 201;
-  width: min(360px, 100vw);
-  max-height: 100vh;
-  max-height: 100dvh;
   background: var(--surface);
-  box-shadow: -6px 0 32px rgba(0,0,0,0.18);
-  transform: translateX(100%);
-  transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
-  display: flex;
+  display: none;
   flex-direction: column;
   overflow: hidden;
 }
-#settingsPanel.open { transform: translateX(0); }
-.settings-header { background: var(--primary); color: #fff; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+body.settings-open #settingsPanel { display: flex; }
+.settings-header { display: none; }
 .settings-header h2 { font-size: 15px; font-weight: 600; }
 #closeSettings { background: none; border: none; color: rgba(255,255,255,0.85); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; transition: color 0.2s; }
 #closeSettings:hover { color: #fff; }
@@ -654,8 +649,12 @@ html[data-theme="dark"] .edec-meas-block-title { background: #2a4c6e; }
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  padding: 11px 12px;
-  padding-bottom: max(11px, env(safe-area-inset-bottom, 0px));
+  padding: 16px 16px;
+  padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
+  max-width: 720px;
+  width: 100%;
+  align-self: center;
+  box-sizing: border-box;
 }
 .settings-body > * + * { margin-top: 13px; }
 .settings-group { border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; }
@@ -706,8 +705,8 @@ html[data-theme="dark"] .edec-meas-block-title { background: #2a4c6e; }
   body.compact-mode select { padding: 4px 7px; }
   body.compact-mode textarea { min-height: 24px; }
   body.compact-mode .calc-hint { padding: 1px 2px 0; }
-  body.compact-mode .rv-subheading { font-size: 11px; margin: 2px 0 1px; padding-top: 2px; }
-  body.compact-mode .rv-subheading:first-child { margin-top: 0; padding-top: 0; }
+  body.compact-mode .rv-subheading:not(#settingsPanel *) { font-size: 11px; margin: 2px 0 1px; padding-top: 2px; }
+  body.compact-mode .rv-subheading:first-child:not(#settingsPanel *) { margin-top: 0; padding-top: 0; }
   body.compact-mode .field-row.two-col { gap: 3px 10px; }
   body.compact-mode .field-row.three-col { gap: 3px 8px; }
   body.compact-mode .section-body .field-row.two-col > .field-group > .vti-delta-resp-primary,
@@ -7125,7 +7124,9 @@ document.addEventListener('DOMContentLoaded', () => {
       burgerBtn.setAttribute('aria-expanded', 'false');
       burgerBtn.focus();
     }
-    burgerBtn.addEventListener('click', openDrawer);
+    burgerBtn.addEventListener('click', function() {
+      if (document.body.classList.contains('settings-open')) { closeSettings(); } else { openDrawer(); }
+    });
     backdrop.addEventListener('click', closeDrawer);
     document.getElementById('navDrawerClose').addEventListener('click', closeDrawer);
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer(); });
@@ -8045,8 +8046,21 @@ function _positionTour(target, step) {
 }
 
 // ─── SETTINGS ──────────────────────────────────────────
-function openSettings() { document.getElementById('settingsPanel').classList.add('open'); document.getElementById('overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
-function closeSettings() { document.getElementById('settingsPanel').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); document.body.style.overflow = ''; }
+function openSettings() {
+  document.body.classList.add('settings-open');
+  const btn = document.getElementById('burgerBtn');
+  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>';
+  btn.setAttribute('aria-label', 'Back to report');
+  document.querySelector('.header-title').innerHTML = 'Settings';
+  document.getElementById('header-spacer-right') && (document.getElementById('header-spacer-right').style.visibility = 'hidden');
+}
+function closeSettings() {
+  document.body.classList.remove('settings-open');
+  const btn = document.getElementById('burgerBtn');
+  btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+  btn.setAttribute('aria-label', 'Open menu');
+  document.querySelector('.header-title').innerHTML = 'FUSIC HD <span>Report Generator</span>';
+}
 
 // ─── SECTION NAVIGATOR ─────────────────────────────────
 function openSecNav() {
