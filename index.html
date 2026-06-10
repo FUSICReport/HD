@@ -115,7 +115,7 @@ html[data-theme="dark"] select {
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; scrollbar-gutter: stable; }
+html { font-size: 16px; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
 /* ─── HEADER ─────────────────────────────────────────── */
@@ -173,6 +173,14 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .nav-drawer-item { display: flex; align-items: center; gap: 14px; width: 100%; background: none; border: none; cursor: pointer; padding: 12px 20px; color: var(--text-muted); font-size: 15px; font-weight: 500; text-align: left; transition: background 0.15s, color 0.15s; }
 .nav-drawer-item:hover { background: var(--primary-xlight); color: var(--primary); }
 .nav-drawer-item svg { width: 22px; height: 22px; flex-shrink: 0; }
+.nav-drawer-dark-mode-row { cursor: pointer; justify-content: flex-start; }
+.nav-drawer-dark-mode-row .toggle-switch { margin-left: auto; }
+/* Desktop mode toggle: only shown on screens wide enough for it to matter */
+.nav-drawer-desktop-mode-row { display: none; }
+@media (min-width: 900px) { .nav-drawer-desktop-mode-row { display: flex; } }
+.nav-view-toggle { display: flex; margin: 12px 16px 8px; background: var(--primary-xlight); border-radius: 8px; padding: 3px; }
+.nav-view-btn { flex: 1; padding: 8px 6px; background: none; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-muted); transition: background 0.15s, color 0.15s; white-space: nowrap; }
+.nav-view-btn.active { background: var(--surface); color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
 
 
 /* ─── ONBOARDING TOUR ─────────────────────────────────── */
@@ -677,15 +685,28 @@ body.settings-open #settingsPanel { display: flex; }
 .settings-measure-master-toggle input:disabled ~ .toggle-thumb { opacity: 0.7; }
 
 /* ─── MAIN CONTENT ────────────────────────────────────── */
-#mainContent { margin-top: var(--header-h); padding: 16px 16px calc(var(--footer-h) + 40px); max-width: 720px; margin-left: auto; margin-right: auto; }
+/* Fixed scroll container pinned between header and footer, mirroring #windowView
+   so both views share identical scrollbar geometry, styling and behaviour */
+#mainContent {
+  position: fixed;
+  top: var(--header-h);
+  bottom: var(--footer-h);
+  left: 0; right: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  padding: 16px 16px 40px;
+  z-index: 5;
+}
+#mainContentInner { max-width: 688px; margin-left: auto; margin-right: auto; }
 
 /* ─── COMPACT MODE (desktop only) ─────────────────────── */
 @media (min-width: 900px) {
   body.compact-mode #mainContent {
-    max-width: 1280px;
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 10px;
+    padding: 10px 24px 40px;
+  }
+  body.compact-mode #mainContentInner {
+    max-width: 1232px;
   }
   body.compact-mode .form-section { margin-bottom: 4px; }
   body.compact-mode .section-header { padding: 4px 10px; }
@@ -772,12 +793,14 @@ body.settings-open #settingsPanel { display: flex; }
   body.compact-mode .section-body .field-group > textarea,
   body.compact-mode .section-body .field-group > .calc-display,
   body.compact-mode .section-body .field-group > .lv-interp { width: 100%; min-width: 0; max-width: none; box-sizing: border-box; }
-  /* Summary: single column */
-  body.compact-mode #sec-summary .section-body {
+  /* Summary: single column (in report view and when mounted in workflow view) */
+  body.compact-mode #sec-summary .section-body,
+  body.compact-mode #wv-summary-mount .section-body {
     grid-template-columns: 1fr;
     justify-items: stretch;
   }
-  body.compact-mode #sec-summary .section-body > * { grid-column: 1 / -1; }
+  body.compact-mode #sec-summary .section-body > *,
+  body.compact-mode #wv-summary-mount .section-body > * { grid-column: 1 / -1; }
   body.compact-mode #summary-clinical-significance-wrap {
     justify-self: start;
     width: 100%;
@@ -3329,56 +3352,71 @@ html[data-theme="dark"] .settings-clear-btn:hover { background: #3f1f1f; }
   bottom: var(--footer-h);
   left: 0; right: 0;
   background: var(--bg);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
   z-index: 5;
 }
 #windowView.wv-visible {
   display: flex;
-  flex-direction: row;
-  gap: 10px;
-  padding: 10px 10px 10px 10px;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 16px;
 }
 #mainContent.wv-hidden { display: none; }
 .wv-panel {
-  flex: 0 0 200px;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 688px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow-y: auto;
-  max-height: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow);
+  margin-bottom: 12px;
 }
 .wv-panel-title {
-  position: sticky;
-  top: 0;
-  background: var(--primary);
-  color: #fff;
+  background: var(--section-hdr);
+  color: var(--section-hdr-text);
+  font-size: 14.5px;
+  font-weight: 700;
+  padding: 13px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(21,101,168,0.12);
+  transition: background 0.15s;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+.wv-panel-title:hover { background: #cfe2f8; }
+.wv-panel-title:active { background: #bdd6f5; }
+.wv-panel-body {
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 20px;
+  align-items: start;
+}
+.wv-subpanel { border-bottom: 1px solid var(--border-light); }
+.wv-subpanel-title {
+  padding: 6px 16px;
+  background: var(--primary-xlight);
+  border-top: 1px solid var(--border-light);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 7px 10px;
-  z-index: 1;
-  flex-shrink: 0;
-  border-radius: var(--radius) var(--radius) 0 0;
-}
-.wv-panel-body { padding: 8px; }
-.wv-subpanel { border-top: 1px solid var(--border-light); padding: 6px 8px 8px; }
-.wv-subpanel-title {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
   color: var(--primary);
   margin-bottom: 6px;
 }
-.wv-field { margin-bottom: 5px; }
+.wv-field { margin-bottom: 0; }
 .wv-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
   margin-bottom: 2px;
@@ -3389,8 +3427,8 @@ html[data-theme="dark"] .settings-clear-btn:hover { background: #3f1f1f; }
 .wv-field textarea,
 .wv-field select {
   width: 100%;
-  padding: 4px 6px;
-  font-size: 13px;
+  padding: 6px 8px;
+  font-size: 14px;
   font-family: var(--font);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -3412,62 +3450,21 @@ html[data-theme="dark"] .settings-clear-btn:hover { background: #3f1f1f; }
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(43,125,233,0.15);
 }
-.wv-checkbox-row { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 5px; }
+.wv-checkbox-row { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 5px; grid-column: 1 / -1; }
 .wv-checkbox-item {
   display: flex; align-items: center; gap: 4px;
-  font-size: 12px; color: var(--text-mid); cursor: pointer; white-space: nowrap;
+  font-size: 13px; color: var(--text-mid); cursor: pointer; white-space: nowrap;
 }
 .wv-checkbox-item input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--primary); }
-.wv-rwma-btn { width: 100%; margin-bottom: 5px; }
-#workflowBtn.wv-btn-active { color: var(--primary); border-color: var(--primary); background: var(--primary-xlight); }
-html[data-theme="dark"] .wv-panel-title { background: var(--primary); }
-html[data-theme="dark"] #workflowBtn.wv-btn-active { background: var(--primary-xlight); }
+.wv-rwma-btn { width: auto; margin-bottom: 5px; }
 html[data-theme="dark"] .wv-field select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a8b8cc' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
-/* Stacked layout (non-compact mode) */
-body:not(.compact-mode) #windowView.wv-visible {
-  flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
-  align-items: center;
-  gap: 0;
-  padding: 16px;
-  scrollbar-gutter: stable both-edges;
-}
-body:not(.compact-mode) .wv-panel {
-  flex: 0 0 auto;
-  width: 100%;
-  max-width: 688px;
-  max-height: none;
-  overflow: hidden;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  margin-bottom: 12px;
-}
-body:not(.compact-mode) .wv-panel-title {
-  border-radius: 0;
-  font-size: 14.5px;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: none;
-  padding: 13px 16px;
-  cursor: pointer;
-  background: var(--section-hdr);
-  color: var(--section-hdr-text);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(21,101,168,0.12);
-  transition: background 0.15s;
-}
-body:not(.compact-mode) .wv-panel-title:hover { background: #cfe2f8; }
-body:not(.compact-mode) .wv-panel-title:active { background: #bdd6f5; }
-body:not(.compact-mode) .wv-chevron { display: flex; transition: transform 0.2s; color: var(--primary); }
-body:not(.compact-mode) .wv-chevron svg { width: 18px; height: 18px; }
-body:not(.compact-mode) .wv-panel.wv-panel-collapsed .wv-chevron { transform: rotate(-90deg); }
+/* Stacked layout (all modes) */
+.wv-chevron { display: flex; transition: transform 0.2s; color: var(--primary); }
+.wv-chevron svg { width: 18px; height: 18px; }
+.wv-panel.wv-panel-collapsed .wv-chevron { transform: rotate(-90deg); }
 .wv-title-inner { display: flex; align-items: center; gap: 8px; }
 .wv-page-header {
   width: 100%; max-width: 688px;
@@ -3483,69 +3480,60 @@ body:not(.compact-mode) .wv-panel.wv-panel-collapsed .wv-chevron { transform: ro
   font-size: 14.5px; font-weight: 700; line-height: 1.2;
   flex-shrink: 0;
 }
-body:not(.compact-mode) .wv-page-header + .wv-panel {
+.wv-page-header + .wv-panel {
   border-top: none;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
-body.compact-mode .wv-page-header { display: none; }
 .wv-panel-icon {
   width: 28px; height: 28px; background: var(--primary); color: #fff;
   border-radius: 6px; display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700; flex-shrink: 0;
 }
-body.compact-mode .wv-panel-icon { display: none; }
-html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title { border-bottom-color: rgba(77,158,255,0.15); }
-html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title:hover { background: #2a3a52; }
-html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title:active { background: #263548; }
-body:not(.compact-mode) .wv-panel.wv-panel-collapsed .wv-panel-body,
-body:not(.compact-mode) .wv-panel.wv-panel-collapsed .wv-subpanel { display: none; }
+.wv-panel.wv-panel-collapsed .wv-panel-body,
+.wv-panel.wv-panel-collapsed .wv-subpanel { display: none; }
+#wv-scan-info.wv-panel { border: 2px solid var(--primary-light); border-top: none; }
 #wv-scan-info:not(.wv-panel-collapsed) > .wv-panel-body,
 #wv-demographics:not(.wv-panel-collapsed) > .wv-panel-body,
-#wv-pericardium:not(.wv-panel-collapsed) > .wv-panel-body { display: block; padding: 0; }
+#wv-pericardium:not(.wv-panel-collapsed) > .wv-panel-body,
+#wv-summary:not(.wv-panel-collapsed) > .wv-panel-body { display: block; padding: 0; }
 #wv-lungs:not(.wv-panel-collapsed) > #wv-lung-mount { display: block; padding: 0; }
-body:not(.compact-mode) .wv-panel-body {
-  padding: 12px 16px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 20px;
-  align-items: start;
+.wv-subpanel .wv-panel-body { padding: 10px 16px; }
+.wv-field:has(.rhythm-chips) { grid-column: 1 / -1; }
+.wv-field:has(textarea) { grid-column: 1 / -1; }
+.wv-panel-body > .rv-subheading { grid-column: 1 / -1; }
+/* Lung section spans full width */
+#wv-lung-mount { grid-column: 1 / -1; padding: 0; }
+html[data-theme="dark"] .wv-panel-title { background: var(--section-hdr); color: var(--section-hdr-text); border-bottom-color: rgba(77,158,255,0.15); }
+html[data-theme="dark"] .wv-panel-title:hover { background: #2a3a52; }
+html[data-theme="dark"] .wv-panel-title:active { background: #263548; }
+html[data-theme="dark"] .wv-subpanel-title { background: var(--primary-xlight); color: var(--primary-dark); }
+
+/* Desktop (compact) density — mirrors Report view's compact rules */
+@media (min-width: 900px) {
+  body.compact-mode #windowView.wv-visible { padding: 10px 24px 40px; }
+  body.compact-mode .wv-page-header,
+  body.compact-mode .wv-panel { max-width: 1232px; }
+  body.compact-mode .wv-panel { margin-bottom: 4px; }
+  body.compact-mode .wv-page-header { padding: 6px 12px; min-height: 0; }
+  body.compact-mode .wv-panel-title { padding: 6px 10px; font-size: 13px; }
+  body.compact-mode .wv-panel-icon { width: 18px; height: 18px; font-size: 10px; border-radius: 4px; }
+  body.compact-mode .wv-title-inner { gap: 5px; }
+  body.compact-mode .wv-chevron svg { width: 13px; height: 13px; }
+  body.compact-mode .wv-panel-body {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px 12px;
+    padding: 4px 10px 6px;
+  }
+  body.compact-mode .wv-subpanel .wv-panel-body { padding: 4px 10px 6px; }
+  body.compact-mode .wv-subpanel-title { padding: 3px 10px; margin-bottom: 0; }
+  body.compact-mode .wv-label { font-size: 10px; }
+  body.compact-mode .wv-field input[type="number"],
+  body.compact-mode .wv-field input[type="text"],
+  body.compact-mode .wv-field textarea,
+  body.compact-mode .wv-field select { padding: 4px 7px; font-size: 13px; }
+  body.compact-mode .wv-field textarea { min-height: 24px; }
 }
-body:not(.compact-mode) .wv-subpanel {
-  border-top: none;
-  padding: 0;
-  border-bottom: 1px solid var(--border-light);
-}
-body:not(.compact-mode) .wv-subpanel-title {
-  padding: 6px 16px;
-  background: var(--primary-xlight);
-  border-top: 1px solid var(--border-light);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-}
-body:not(.compact-mode) .wv-subpanel .wv-panel-body { padding: 10px 16px; }
-body:not(.compact-mode) .wv-field { margin-bottom: 0; }
-body:not(.compact-mode) .wv-label { font-size: 11px; }
-body:not(.compact-mode) .wv-field input[type="number"],
-body:not(.compact-mode) .wv-field input[type="text"],
-body:not(.compact-mode) .wv-field textarea,
-body:not(.compact-mode) .wv-field select { padding: 6px 8px; font-size: 14px; }
-body:not(.compact-mode) .wv-checkbox-row { grid-column: 1 / -1; gap: 6px 16px; }
-body:not(.compact-mode) .wv-checkbox-item { font-size: 13px; }
-body:not(.compact-mode) .wv-field:has(.rhythm-chips) { grid-column: 1 / -1; }
-body:not(.compact-mode) .wv-field:has(textarea) { grid-column: 1 / -1; }
-body:not(.compact-mode) .wv-rwma-btn { width: auto; }
-body:not(.compact-mode) .wv-panel-body > .rv-subheading { grid-column: 1 / -1; }
-/* Lung section in stacked mode spans full width */
-body:not(.compact-mode) #wv-lung-mount { grid-column: 1 / -1; padding: 0; }
-/* Chevron hidden in compact/desktop mode */
-body.compact-mode .wv-chevron { display: none; }
-html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title { background: var(--section-hdr); color: var(--section-hdr-text); }
-html[data-theme="dark"] body:not(.compact-mode) .wv-panel-title:hover { background: #2a3a52; }
-html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background: var(--primary-xlight); color: var(--primary-dark); }
 </style>
 </head>
 <body>
@@ -3565,6 +3553,10 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
   <div class="nav-drawer-header">
     <button type="button" id="navDrawerClose" aria-label="Close menu">&#x2715;</button>
   </div>
+  <div class="nav-view-toggle">
+    <button type="button" id="viewToggleReport" class="nav-view-btn active" onclick="setViewMode(false)">Report View</button>
+    <button type="button" id="viewToggleWorkflow" class="nav-view-btn" onclick="setViewMode(true)">Workflow View</button>
+  </div>
   <div class="nav-drawer-items">
     <button type="button" id="refRangesBtn" class="nav-drawer-item" title="Reference ranges" aria-label="Open reference ranges">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -3578,6 +3570,24 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
     </button>
+    <label class="nav-drawer-item nav-drawer-dark-mode-row" title="Dark mode" aria-label="Toggle dark mode">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      Dark mode
+      <span class="toggle-switch" aria-hidden="true">
+        <input type="checkbox" id="toggle-dark-mode">
+        <span class="toggle-track"></span>
+        <span class="toggle-thumb"></span>
+      </span>
+    </label>
+    <label class="nav-drawer-item nav-drawer-dark-mode-row nav-drawer-desktop-mode-row" title="Desktop mode" aria-label="Toggle desktop mode">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Desktop mode
+      <span class="toggle-switch" aria-hidden="true">
+        <input type="checkbox" id="toggle-compact-mode">
+        <span class="toggle-track"></span>
+        <span class="toggle-thumb"></span>
+      </span>
+    </label>
   </div>
 </nav>
 
@@ -3854,20 +3864,6 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
           </div>
           <label class="toggle-switch"><input type="checkbox" id="toggle-warn-before-unload" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
         </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">Desktop mode</div>
-            <div class="settings-toggle-hint">Reduces vertical space and uses the full screen width on desktop, fitting more fields into view and minimising scrolling. No effect on mobile.</div>
-          </div>
-          <label class="toggle-switch"><input type="checkbox" id="toggle-compact-mode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">Dark mode</div>
-            <div class="settings-toggle-hint">Switches the interface to a dark colour scheme.</div>
-          </div>
-          <label class="toggle-switch"><input type="checkbox" id="toggle-dark-mode"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-        </div>
       </div>
     </div>
     <div class="settings-group">
@@ -3938,6 +3934,7 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
 
 <!-- ══════════ MAIN CONTENT ════════════════════════════ -->
 <main id="mainContent">
+<div id="mainContentInner">
 
   <!-- ── SCAN INFORMATION CARD ─────────────────────── -->
   <div id="scanInfoCard">
@@ -5259,6 +5256,7 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
     </div>
   </section>
 
+</div>
 </main>
 
 <!-- ══════════ WINDOW VIEW ════════════════════════════ -->
@@ -5269,10 +5267,6 @@ html[data-theme="dark"] body:not(.compact-mode) .wv-subpanel-title { background:
   <button class="btn btn-secondary" id="secNavBtn" aria-label="Navigate" title="Navigate">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
     <span id="secNavBtnLabel">Navigate</span>
-  </button>
-  <button class="btn btn-secondary" id="workflowBtn" aria-label="Toggle workflow view" aria-pressed="false" title="Toggle workflow view" onclick="toggleWindowView()">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-    Workflow
   </button>
   <div class="footer-export-split" id="exportSplitWrap">
     <button type="button" class="btn btn-primary footer-export-primary" id="exportBtn" title="Export report — full descriptions" aria-haspopup="dialog">
@@ -7124,6 +7118,8 @@ document.addEventListener('DOMContentLoaded', () => {
       burgerBtn.setAttribute('aria-expanded', 'false');
       burgerBtn.focus();
     }
+    window._openNavDrawer = openDrawer;
+    window._closeNavDrawer = closeDrawer;
     burgerBtn.addEventListener('click', function() {
       if (document.body.classList.contains('settings-open')) { closeSettings(); } else { openDrawer(); }
     });
@@ -7888,10 +7884,20 @@ function recalcAVAContinuity() {
 // ─── ONBOARDING TOUR ───────────────────────────────────
 const TOUR_STEPS = [
   {
-    sel: '.header-actions',
+    sel: '#burgerBtn',
     title: 'Welcome to FUSIC HD',
-    desc: 'This tool generates structured FUSIC HD echo reports. Use the icons here to switch theme, review reference ranges, open settings, or relaunch this tour at any time.',
-    r: '24px'
+    desc: 'This tool generates structured FUSIC HD echo reports. Everything you need — views, reference ranges, settings, and this tour — lives behind this menu button.',
+    r: '50%',
+    noScroll: true
+  },
+  {
+    sel: '.nav-view-toggle',
+    title: 'Report View vs Workflow View',
+    desc: 'Two ways to enter the same report. Report View lists the form in the order of the final report — ideal for writing up afterwards. Workflow View organises the identical fields by echocardiography window (PLAX, PSAX, A4C…) so you can enter findings in the order you scan. Both views share the same data — switch whenever you like.',
+    r: '10px',
+    noScroll: true,
+    before() { window._openNavDrawer?.(); },
+    after() { window._closeNavDrawer?.(); }
   },
   {
     sel: '#scanInfoCard',
@@ -7924,16 +7930,28 @@ const TOUR_STEPS = [
   {
     sel: '#settingsPanel',
     title: 'Settings & Options',
-    desc: 'The options menu gives granular control over your reporting experience. For example, if your machine does not allow you to perform Continous Wave Doppler (CWD) measurements, you can disable these from displaying on your reporting form. Additional features include a display mode optimised for desktop PCs and the ability to pseudo-anonymise your studies. If you log onto a different computer or device it is worth re-visiting these settings as they are not saved between sessions.',
+    desc: 'The options menu gives granular control over your reporting experience. For example, if your machine does not allow you to perform Continous Wave Doppler (CWD) measurements, you can disable these from displaying on your reporting form. Additional features include the ability to pseudo-anonymise your studies. If you log onto a different computer or device it is worth re-visiting these settings as they are not saved between sessions.',
     r: '0px',
+    delay: 400,
     before() { openSettings(); },
     after() { closeSettings(); }
   },
   {
     sel: '#stickyFooter',
     title: 'Exporting Your Report',
-    desc: 'When ready, use the Export button to generate your report. Choose from plain text, print/PDF, Excel workbook, BSE/EDEC style, and more.',
-    r: '0px'
+    desc: 'When you\'re ready, the Export button gathers everything you\'ve entered — in either view — into your chosen format.',
+    r: '0px',
+    noScroll: true
+  },
+  {
+    sel: '.modal-box--export',
+    title: 'Export Options',
+    desc: 'Choose plain text, print/save-as-PDF, Excel workbook, or BSE/EDEC-style outputs. Tick "Include images in report" to attach images and embed them directly into the PDF outputs — you can select, reorder and review them before exporting. You can also pseudo-anonymise the study from here.',
+    r: '12px',
+    noScroll: true,
+    delay: 400,
+    before() { openExportModal(); },
+    after() { closeExportModal(); }
   }
 ];
 
@@ -7999,10 +8017,9 @@ function _goToTourStep(idx) {
   const target = document.querySelector(step.sel);
   if (!target) return;
 
-  const noScroll = step.sel === '#appHeader' || step.sel === '.header-actions' || step.sel === '#stickyFooter';
-  if (!noScroll) target.scrollIntoView({ behavior: 'instant', block: 'center' });
+  if (!step.noScroll) target.scrollIntoView({ behavior: 'instant', block: 'center' });
 
-  const delay = step.sel === '#settingsPanel' ? 400 : 350;
+  const delay = step.delay || 350;
   setTimeout(() => { if (_tourActive) _positionTour(target, step); }, delay);
 
   if (_tourRO) _tourRO.disconnect();
@@ -8099,9 +8116,9 @@ function openSecNav() {
           sec.classList.remove('section-collapsed');
           updateScanInfoCollapseAllButton();
         }
-        const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 56;
-        const top = sec.getBoundingClientRect().top + window.scrollY - headerH - 8;
-        window.scrollTo({ top, behavior: 'instant' });
+        const mc = document.getElementById('mainContent');
+        const top = sec.getBoundingClientRect().top - mc.getBoundingClientRect().top + mc.scrollTop - 8;
+        mc.scrollTo({ top, behavior: 'instant' });
       });
       list.appendChild(btn);
     });
@@ -14901,16 +14918,7 @@ const WV_WINDOWS = [
   { id:'wv-lungs', title:'Lungs', lungSection:true,
     fields:[{id:'f-bLinesLung',label:'B-lines on lung ultrasound'}]
   },
-  { id:'wv-haemo', title:'Haemodynamics',
-    fields:[
-      {id:'f-lvotDiam',label:'LVOT Diameter'},{id:'f-lvotVTI',label:'LVOT VTI'},
-      {id:'f-vtiDeltaResp',label:'VTI % △ respiration'},
-      {id:'f-vtiDeltaIntervention',label:'VTI % △ intervention'},
-      {id:'vti-int-plr',label:'PLR'},{id:'vti-int-fluids',label:'Fluids'},
-      {id:'vti-int-pressor',label:'Pressor'},{id:'vti-int-inotropes',label:'Inotropes'},
-      {id:'f-vtiInterventionDetails',label:'Intervention details'},
-    ]
-  },
+  { id:'wv-summary', title:'Summary & conclusions', summarySection: true },
 ];
 
 let _wvActive = false;
@@ -14919,11 +14927,16 @@ let _wvLungBodyParent = null;
 let _wvScanInfoBodyParent = null;
 let _wvDemographicsBodyParent = null;
 let _wvPericardiumBodyParent = null;
+let _wvSummaryBodyParent = null;
+
+function setViewMode(workflowActive) {
+  if (_wvActive !== workflowActive) toggleWindowView();
+}
 
 function toggleWindowView() {
   _wvActive = !_wvActive;
-  document.getElementById('workflowBtn')?.setAttribute('aria-pressed', String(_wvActive));
-  document.getElementById('workflowBtn')?.classList.toggle('wv-btn-active', _wvActive);
+  document.getElementById('viewToggleReport')?.classList.toggle('active', !_wvActive);
+  document.getElementById('viewToggleWorkflow')?.classList.toggle('active', _wvActive);
   document.getElementById('mainContent')?.classList.toggle('wv-hidden', _wvActive);
   const wv = document.getElementById('windowView');
   if (_wvActive) {
@@ -14948,7 +14961,7 @@ function wvRender() {
   wvHeader.className = 'wv-page-header';
   const wvHeaderTitle = document.createElement('span');
   wvHeaderTitle.className = 'scan-info-header-title';
-  wvHeaderTitle.textContent = 'Scan information – Workflow View';
+  wvHeaderTitle.textContent = 'Scan information';
   wvHeader.appendChild(wvHeaderTitle);
   const wvCollapseBtn = document.createElement('button');
   wvCollapseBtn.type = 'button';
@@ -14994,6 +15007,7 @@ function wvRender() {
     if (win.lungSection) wvMountLungSection(panel);
     if (win.demoSection) wvMountDemographicsSection(panel);
     if (win.periSection) wvMountPericardiumSection(panel);
+    if (win.summarySection) wvMountSummarySection(panel);
     if (win.subpanels) {
       win.subpanels.forEach(sub => {
         const subDiv = document.createElement('div');
@@ -15187,6 +15201,17 @@ function wvMountPericardiumSection(panel) {
   panel.appendChild(mount);
 }
 
+function wvMountSummarySection(panel) {
+  const body = document.querySelector('#sec-summary .section-body');
+  if (!body) return;
+  _wvSummaryBodyParent = body.parentElement;
+  const mount = document.createElement('div');
+  mount.id = 'wv-summary-mount';
+  mount.className = 'wv-panel-body';
+  mount.appendChild(body);
+  panel.appendChild(mount);
+}
+
 function wvMountDemographicsSection(panel) {
   const body = document.querySelector('#sec-demographics .section-body');
   if (!body) return;
@@ -15199,7 +15224,7 @@ function wvMountDemographicsSection(panel) {
 }
 
 function wvToggleAllPanels() {
-  const panels = [...document.querySelectorAll('#windowView .wv-panel')];
+  const panels = [...document.querySelectorAll('#windowView .wv-panel:not(#wv-scan-info)')];
   const allCollapsed = panels.every(p => p.classList.contains('wv-panel-collapsed'));
   panels.forEach(p => p.classList.toggle('wv-panel-collapsed', !allCollapsed));
   wvUpdateCollapseAllBtn();
@@ -15208,7 +15233,7 @@ function wvToggleAllPanels() {
 function wvUpdateCollapseAllBtn() {
   const btn = document.getElementById('wvCollapseAllBtn');
   if (!btn) return;
-  const panels = [...document.querySelectorAll('#windowView .wv-panel')];
+  const panels = [...document.querySelectorAll('#windowView .wv-panel:not(#wv-scan-info)')];
   const allCollapsed = panels.every(p => p.classList.contains('wv-panel-collapsed'));
   btn.setAttribute('aria-label', allCollapsed ? 'Expand all workflow panels' : 'Collapse all workflow panels');
   btn.title = allCollapsed ? 'Expand all panels' : 'Collapse all panels';
@@ -15231,6 +15256,11 @@ function wvTeardown() {
     const body = document.getElementById('wv-pericardium-mount')?.querySelector('.section-body');
     if (body) _wvPericardiumBodyParent.appendChild(body);
     _wvPericardiumBodyParent = null;
+  }
+  if (_wvSummaryBodyParent) {
+    const body = document.getElementById('wv-summary-mount')?.querySelector('.section-body');
+    if (body) _wvSummaryBodyParent.appendChild(body);
+    _wvSummaryBodyParent = null;
   }
   if (_wvLungBodyParent) {
     const lungBody = document.getElementById('wv-lung-mount')?.querySelector('.section-body');
